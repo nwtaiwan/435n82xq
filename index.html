@@ -1,0 +1,2820 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西北社區財務系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- jsPDF CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f3f4f6;
+            color: #374151;
+            height: 100vh;
+            font-size: 80%;
+        }
+        .app-container {
+            width: 1440px;
+            height: 720px; 
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            background-color: white;
+        }
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px; 
+            overflow-y: auto;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ffffff;
+            width: 1220px;
+        }
+        .logo-image {
+            width: 120px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px; 
+        }
+        .title-wrapper {
+            position: relative;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .title-container {
+            width: 100%;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px; 
+        }
+        #title-part1 {
+            font-size: 20px;
+            color: #FF0000;
+            font-weight: bold;
+        }
+        #title-part2 {
+            font-size: 20px;
+            color: #000000;
+        }
+        #settings-btn-header {
+           display: none; 
+        }
+        .sidebar nav {
+            margin-top: 0;
+        }
+        .nav-item {
+            width: 180px;
+            height: 70px; 
+            margin-bottom: 10px;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.7);
+        }
+        .nav-item:hover {
+            transform: scale(1.05);
+        }
+        .nav-item.active {
+            background-color: #ffebeb;
+        }
+        .nav-item:not(.active) {
+            background-color: #ebffe9;
+        }
+        .nav-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+        .nav-item .text {
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .nav-item.active .text {
+            color: #ef4444;
+        }
+        .nav-item:not(.active) .text {
+            color: #1e40af;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .page-header {
+            width: 1180px;
+            max-width: 100%;
+            height: 40px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex;
+            align-items: center;
+            padding-left: 20px;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+        }
+        .page-header h3 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .info-card, .full-width-card {
+             background-color: white;
+             border-radius: 0.75rem;
+             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+             padding: 1rem;
+             box-sizing: border-box;
+             position: relative;
+             overflow: hidden;
+        }
+       
+        .expense-text { color: #ef4444; }
+        .income-text { color: #22c55e; }
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .custom-modal {
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .transaction-table th, .transaction-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        .transaction-table th {
+            background-color: #f9fafb;
+            font-weight: bold;
+        }
+        .transaction-table tbody tr:nth-child(odd) {
+            background-color: #f9fafb;
+        }
+        .sub-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .sub-tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .sub-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .a4-preview-container {
+            padding: 1rem;
+            background-color: #e5e7eb;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .a4-preview {
+            width: 100%;
+            aspect-ratio: 210 / 297;
+            min-height: 400px;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            padding: 1cm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .preview-header {
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #000;
+        }
+        .preview-body {
+            flex-grow: 1;
+        }
+        .preview-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 0.5rem;
+        }
+        .overdue-resident-item {
+            display: inline-block;
+            font-size: 16px;
+            color: white;
+            background-color: #ef4444; /* red-500 */
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        .signature-container {
+            padding-top: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+        }
+        .signature-table td {
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 10pt;
+        }
+        .signature-table tr:first-child td {
+            height: 0.8cm;
+            font-weight: bold;
+        }
+        .signature-table tr:last-child td {
+            height: 2.7cm;
+        }
+        /* Responsive styles for smaller screens */
+        @media (max-width: 720px) {
+            body {
+                padding: 0;
+            }
+            .app-container {
+                height: 100%;
+                width: 100%;
+                border-radius: 0;
+            }
+            .sidebar {
+                width: 30.55vw; /* 220px at 720px screen width */
+                padding: 2vw;
+            }
+            .logo-image {
+                width: 16.66vw; /* 120px */
+                height: 8.33vw; /* 60px */
+                margin-bottom: 1.38vw; /* 10px */
+            }
+            .title-container {
+                width: 27.77vw; /* 200px */
+                height: 2.77vw; /* 20px */
+                margin-bottom: 1.38vw; /* 10px */
+            }
+            #title-part1, #title-part2 {
+                font-size: 2.77vw; /* 20px */
+            }
+            .nav-item {
+                width: 25vw; /* 180px */
+                height: 8.33vw; /* 60px */
+                padding: 0 4.16vw; /* 30px */
+                margin-bottom: 1.38vw;
+            }
+            .nav-icon {
+                width: 4.44vw; /* 32px */
+                height: 4.44vw;
+            }
+            .nav-item .text {
+                font-size: 2.77vw; /* 20px */
+            }
+            .main-content {
+                width: 69.45vw; /* 1220 at 1440px -> scaled down */
+                padding: 2vw;
+            }
+             .page-header {
+                height: 7vw;
+                margin-bottom: 3vw;
+             }
+             .page-header h3 {
+                font-size: 4vw;
+             }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-page" class="fixed inset-0 w-full h-full bg-red-600 flex items-center justify-center z-50">
+        <div class="bg-white bg-opacity-90 p-6 rounded-lg shadow-xl flex flex-col items-center justify-center space-y-3 w-[480px] h-[300px]">
+            <img id="login-logo" src="https://static.wixstatic.com/media/6148f9_56377cef73c1498f95a2c3057b89f2ed~mv2.png" alt="社區標誌" style="width: 120px; height: 60px;">
+            <h1 id="login-community-name" class="text-xl font-bold text-red-600"></h1>
+            <h2 class="text-xl font-bold text-black">財務系統</h2>
+            <div class="relative w-full">
+                <input type="password" id="password-input" class="shadow border rounded-lg w-full py-2 px-3 text-center" placeholder="請輸入密碼">
+                <i id="toggle-password" class="fas fa-eye absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500"></i>
+            </div>
+            <p id="login-error" class="text-red-500 text-sm h-4"></p>
+            <button id="login-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">確認</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="app-container" style="display: none;">
+        <aside class="sidebar">
+            <img id="sidebar-logo" src="https://static.wixstatic.com/media/6148f9_56377cef73c1498f95a2c3057b89f2ed~mv2.png" alt="社區標誌" class="logo-image">
+            <div class="title-wrapper">
+                <div class="title-container">
+                    <h1 id="title-part1">西北社區</h1>
+                </div>
+                <div class="title-container" style="margin-bottom: 0;">
+                     <h1 id="title-part2">財務系統</h1>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li class="nav-item active" data-page="overview">
+                        <img src="https://static.wixstatic.com/media/6148f9_1e19b1b7002046568d5a014dc313fc32~mv2.png" class="nav-icon" alt="總覽圖標">
+                        <span class="text">總覽資訊</span>
+                    </li>
+                    <li class="nav-item" data-page="daily">
+                        <img src="https://static.wixstatic.com/media/6148f9_d28b4e07344746d2b46950763cb1f79b~mv2.png" class="nav-icon" alt="每日收支圖標">
+                        <span class="text">每日收支</span>
+                    </li>
+                    <li class="nav-item" data-page="bank">
+                        <img src="https://static.wixstatic.com/media/6148f9_4441e91781f440b4a4bac130647206aa~mv2.png" class="nav-icon" alt="銀行管理圖標">
+                        <span class="text">銀行明細</span>
+                    </li>
+                    <li class="nav-item" data-page="residents">
+                        <img src="https://static.wixstatic.com/media/6148f9_83475c074b294a18829c7a6e8e0cc8de~mv2.png" class="nav-icon" alt="住戶名單圖標">
+                        <span class="text">住戶名單</span>
+                    </li>
+                    <li class="nav-item" data-page="report">
+                        <img src="https://static.wixstatic.com/media/6148f9_6e1a7680a52045ebba701fe3412ed821~mv2.png" class="nav-icon" alt="報表管理圖標">
+                        <span class="text">報表管理</span>
+                    </li>
+                    <li class="nav-item" data-page="other">
+                        <img src="https://static.wixstatic.com/media/6148f9_8ac02947a0224263adf721ebd45ac358~mv2.png" class="nav-icon" alt="其他功能圖標">
+                        <span class="text">其他功能</span>
+                    </li>
+                    <li class="nav-item" data-page="settings">
+                        <img src="https://static.wixstatic.com/media/6148f9_13dc883e11d246fca1e74da86e6d28bb~mv2.png" class="nav-icon" alt="系統設定圖標">
+                        <span class="text">系統設定</span>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div id="overview-page" class="page active">
+                <div class="page-header"><h3>總覽資訊</h3></div>
+
+                <!-- Row 1 -->
+                <div class="flex gap-5 mb-2.5">
+                    <!-- Left: Clock -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 flex flex-col justify-around">
+                        <div class="flex justify-between items-center">
+                            <span id="overview-date" class="text-xl text-purple-700"></span>
+                            <button id="toggle-calendar-btn" class="text-sm bg-purple-100 text-purple-700 px-3 py-1.5 rounded-md hover:bg-purple-200 transition-colors">切換民國</button>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="overview-time" class="text-xl text-indigo-800"></span>
+                            <button id="toggle-time-format-btn" class="text-sm bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-md hover:bg-indigo-200 transition-colors">切換12小時</button>
+                        </div>
+                    </div>
+                    <!-- Right: To-do -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 overflow-y-auto">
+                        <h4 class="text-xl text-orange-800">代辦事項</h4>
+                        <ul id="overview-todo-list" class="mt-2 text-gray-600 list-disc list-inside space-y-1 text-xl"></ul>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="flex gap-5 mb-2.5">
+                    <!-- Left: Income/Expense -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 flex flex-col justify-around">
+                        <div class="flex justify-between items-center">
+                             <p class="text-xl text-black"><span id="current-month-income"></span>月 總收入</p>
+                             <p id="monthly-income" class="text-xl text-green-600">$0</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xl text-black"><span id="current-month-expense"></span>月 總支出</p>
+                            <p id="monthly-expense" class="text-xl text-red-600">$0</p>
+                        </div>
+                    </div>
+                    <!-- Right: Bank Details -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 flex flex-col justify-between">
+                        <p class="text-xl text-black text-left">目前 銀行明細</p>
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl text-black">定存</span>
+                                <span id="total-fixed-deposit" class="text-xl text-blue-600">$0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl text-black">零用金</span>
+                                <span id="total-cash" class="text-xl text-blue-600">$0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl text-black">銀行</span>
+                                <span id="total-banks" class="text-xl text-blue-600">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Row 3 -->
+                <div class="flex gap-5 mb-2.5">
+                    <!-- Left: Prepaid/Payable -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 flex flex-col justify-around">
+                        <div class="flex justify-between items-center">
+                            <p class="text-xl text-black">總預收款項</p>
+                            <p id="total-prepaid" class="text-xl text-teal-600">$0</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xl text-black">應收帳款</p>
+                            <p id="total-receivable" class="text-xl text-green-600">$0</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xl text-black">應付帳款</p>
+                            <p id="total-payable" class="text-xl text-red-600">$0</p>
+                        </div>
+                    </div>
+                    <!-- Right: Resident Count -->
+                    <div class="w-[580px] h-[160px] bg-white rounded-lg shadow p-4 flex flex-col items-start">
+                        <div class="w-full flex justify-between items-center">
+                             <p class="text-xl text-black">住戶總數</p>
+                             <p id="total-residents" class="text-xl text-yellow-500">0 戶</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4 -->
+                <div class="w-full max-w-[1180px] min-h-[120px] bg-red-50 rounded-lg shadow p-4 flex flex-col items-start">
+                    <div class="w-full flex justify-between items-center">
+                        <p class="text-xl text-red-800">住戶欠繳狀況</p>
+                        <p id="overdue-residents-count" class="text-xl text-red-800">0 戶</p>
+                    </div>
+                    <div id="overdue-residents-list" class="mt-2 w-full"></div>
+                </div>
+            </div>
+
+            <div id="daily-page" class="page">
+                <div class="page-header"><h3>每日收支</h3></div>
+                <div class="sub-tabs" id="daily-page-sub-tabs">
+                     <div class="sub-tab active" data-tab="transactions-daily">收支明細</div>
+                    <div class="sub-tab" data-tab="prepaid-daily">預收款項</div>
+                    <div class="sub-tab" data-tab="receivable-daily">應收帳款</div>
+                    <div class="sub-tab" data-tab="payable-daily">應付帳款</div>
+                    <div class="sub-tab" data-tab="agency-daily">代收代付</div>
+                    <div class="sub-tab" data-tab="todo-daily">代辦事項</div>
+                </div>
+                <div id="daily-page-tab-contents">
+                    <div id="transactions-daily-tab-content" class="tab-content active">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                                <div class="flex items-center gap-x-4">
+                                    <span class="font-bold">篩選方式:</span>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="period-filter" value="day" class="form-radio" checked>
+                                        <span class="ml-2">日期</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="period-filter" value="month" class="form-radio">
+                                        <span class="ml-2">月份</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="period-filter" value="year" class="form-radio">
+                                        <span class="ml-2">年份</span>
+                                    </label>
+                                </div>
+                        
+                                <div class="flex items-center gap-2 flex-grow">
+                                    <input type="date" id="date-filter-input" class="shadow border rounded-lg py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <input type="month" id="month-filter-input" class="shadow border rounded-lg py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline hidden">
+                                    <input type="number" id="year-filter-input" placeholder="YYYY" class="shadow border rounded-lg py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline hidden w-24">
+                                </div>
+                                
+                                <select id="sort-direction-select" class="shadow border rounded-lg py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                    <option value="desc">排序: 新至舊</option>
+                                    <option value="asc">排序: 舊至新</option>
+                                </select>
+                            </div>
+                            
+                            <div id="daily-summary" class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-100 rounded-lg p-4">
+                                    <h4 class="font-semibold text-lg" id="income-title">當日總收入</h4>
+                                    <p id="total-income" class="text-green-500 font-bold text-2xl"></p>
+                                </div>
+                                <div class="bg-gray-100 rounded-lg p-4">
+                                    <h4 class="font-semibold text-lg" id="expense-title">當日總支出</h4>
+                                    <p id="total-expense" class="text-red-500 font-bold text-2xl"></p>
+                                </div>
+                            </div>
+
+                            <div id="export-import-buttons" class="flex flex-col sm:flex-row gap-4 mb-4">
+                                <button id="add-transaction-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                                    <i class="fas fa-plus mr-2"></i>新增交易
+                                </button>
+                                <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                                    <i class="fas fa-trash-alt mr-2"></i>刪除選取
+                                </button>
+                                <button id="export-csv-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                                    <i class="fas fa-file-csv mr-2"></i>匯出 CSV
+                                </button>
+                                <input type="file" id="import-csv-input" accept=".csv" class="hidden">
+                                <button id="import-csv-btn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                                    <i class="fas fa-file-upload mr-2"></i>匯入 CSV
+                                </button>
+                                <button id="export-pdf-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出 PDF
+                                </button>
+                            </div>
+
+                            <div id="daily-list-container" class="overflow-x-auto">
+                                <table class="transaction-table table-auto">
+                                    <thead>
+                                        <tr>
+                                            <th><input type="checkbox" id="select-all-transactions-checkbox"></th>
+                                            <th>編號</th>
+                                            <th>日期</th>
+                                            <th>對象</th>
+                                            <th>類型</th>
+                                            <th>類別</th>
+                                            <th>月份</th>
+                                            <th>金額</th>
+                                            <th>收支方式</th>
+                                            <th>摘要</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <p id="no-transactions-message" class="text-center text-gray-500 mt-4 hidden">目前沒有交易紀錄。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Cloned Content Starts Here -->
+                    <div id="prepaid-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
+                    <div id="receivable-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
+                    <div id="payable-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
+                    <div id="agency-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
+                    <div id="todo-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
+                     <!-- Cloned Content Ends Here -->
+                </div>
+            </div>
+
+            <div id="bank-page" class="page">
+                <div class="page-header"><h3>銀行明細</h3></div>
+                <div class="sub-tabs" id="bank-tabs"></div>
+                <div id="bank-content" class="bg-white rounded-xl shadow-lg p-6">
+                    <p class="text-gray-500">請選擇一個銀行帳戶來查看其明細。</p>
+                </div>
+            </div>
+
+            <div id="residents-page" class="page">
+                <div class="page-header"><h3>住戶名單</h3></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                     <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                        <select id="population-control-filter-select" class="shadow border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                        <select id="order-control-filter-select" class="shadow border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                        <input type="month" id="payment-month-filter" class="shadow border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                        <button id="add-resident-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                            <i class="fas fa-plus mr-2"></i>新增住戶
+                        </button>
+                        <button id="delete-selected-residents-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                            <i class="fas fa-trash-alt mr-2"></i>刪除選取
+                        </button>
+                        <button id="export-residents-csv-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                            <i class="fas fa-file-csv mr-2"></i>匯出 CSV
+                        </button>
+                        <input type="file" id="import-residents-csv-input" accept=".csv" class="hidden">
+                        <button id="import-residents-csv-btn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                            <i class="fas fa-file-upload mr-2"></i>匯入 CSV
+                        </button>
+                        <button id="export-residents-pdf-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                            <i class="fas fa-file-pdf mr-2"></i>匯出 PDF
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="transaction-table table-fixed">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;"><input type="checkbox" id="select-all-residents-checkbox"></th>
+                                    <th style="width: 7.9%;">編號</th>
+                                    <th style="width: 7.9%;">戶號</th>
+                                    <th style="width: 7.9%;">姓名</th>
+                                    <th style="width: 7.9%;">地址</th>
+                                    <th style="width: 7.9%;">住家人口總數</th>
+                                    <th style="width: 7.9%;">人口管制戶</th>
+                                    <th style="width: 7.9%;">秩序管制戶</th>
+                                    <th style="width: 7.9%;">設定每月管理費金額</th>
+                                    <th style="width: 7.9%;">預繳金額</th>
+                                    <th style="width: 7.9%;">繳費狀況</th>
+                                    <th style="width: 7.9%;">備註</th>
+                                    <th style="width: 7.9%;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="residents-list-container"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="resident-control-settings-container-page" class="bg-white rounded-xl shadow-lg p-6 mb-8"></div>
+            </div>
+
+            <div id="report-page" class="page">
+                <div class="page-header"><h3>報表管理</h3></div>
+                <div class="sub-tabs" id="report-sub-tabs">
+                    <div class="sub-tab active" data-tab="daily-report" data-name="日報表">日報表</div>
+                    <div class="sub-tab" data-tab="monthly-report" data-name="月報表">月報表</div>
+                    <div class="sub-tab" data-tab="yearly-report" data-name="年報表">年報表</div>
+                    <div class="sub-tab" data-tab="custom-report" data-name="自定義報表">自定義報表</div>
+                    <div class="sub-tab" data-tab="financial-report" data-name="每月財報">每月財報</div>
+                    <div class="sub-tab" data-tab="forecast-report" data-name="預測財報">預測財報</div>
+                    <div class="sub-tab" data-tab="reminder-report" data-name="催繳通知單">催繳通知單</div>
+                </div>
+
+                <div id="report-contents">
+                    <!-- Daily Report Content -->
+                    <div id="daily-report-content" class="tab-content active">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                            <label for="daily-report-date" class="font-bold">日期:</label>
+                            <input type="date" id="daily-report-date" class="shadow border rounded-lg py-1 px-2 text-gray-700">
+                            <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Monthly Report Content -->
+                    <div id="monthly-report-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                             <label for="monthly-report-month" class="font-bold">月份:</label>
+                            <input type="month" id="monthly-report-month" class="shadow border rounded-lg py-1 px-2 text-gray-700">
+                            <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Yearly Report Content -->
+                    <div id="yearly-report-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                             <label for="yearly-report-year" class="font-bold">年份:</label>
+                            <input type="number" placeholder="YYYY" id="yearly-report-year" class="shadow border rounded-lg py-1 px-2 text-gray-700 w-28">
+                             <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Custom Report Content -->
+                    <div id="custom-report-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                            <label for="custom-report-start" class="font-bold">開始日期:</label>
+                            <input type="date" id="custom-report-start" class="shadow border rounded-lg py-1 px-2 text-gray-700">
+                            <label for="custom-report-end" class="font-bold">結束日期:</label>
+                            <input type="date" id="custom-report-end" class="shadow border rounded-lg py-1 px-2 text-gray-700">
+                             <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- Monthly Financial Report Content -->
+                    <div id="financial-report-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                             <label for="financial-report-month" class="font-bold">月份:</label>
+                             <input type="month" id="financial-report-month" class="shadow border rounded-lg py-1 px-2 text-gray-700">
+                             <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Forecast Report Content -->
+                    <div id="forecast-report-content" class="tab-content">
+                       <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                            <label for="forecast-report-year" class="font-bold">年份:</label>
+                            <input type="number" placeholder="YYYY" id="forecast-report-year" class="shadow border rounded-lg py-1 px-2 text-gray-700 w-28">
+                             <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Payment Reminder Content -->
+                    <div id="reminder-report-content" class="tab-content">
+                       <div class="bg-white rounded-xl shadow-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+                            <label for="reminder-resident-select" class="font-bold">住戶:</label>
+                            <select id="reminder-resident-select" class="shadow border rounded-lg py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline flex-grow"></select>
+                             <div class="ml-auto flex items-center gap-2">
+                                <select class="report-preparer-select shadow border rounded-lg py-1 px-2"></select>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg export-report-pdf-btn">
+                                    <i class="fas fa-file-pdf mr-2"></i>匯出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="a4-preview-container">
+                    <div class="a4-preview">
+                        <div id="report-preview-header" class="preview-header"></div>
+                        <div id="report-preview-body" class="preview-body"></div>
+                        <div class="signature-container">
+                            <table class="signature-table">
+                                <tbody>
+                                    <tr>
+                                        <td>主任委員</td>
+                                        <td>副主任委員</td>
+                                        <td>監察委員</td>
+                                        <td>財務委員</td>
+                                        <td>物業核章</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="preview-footer">
+                            <span id="report-preview-date"></span>
+                            <span id="report-preview-preparer"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <div id="other-page" class="page">
+                <div class="page-header"><h3>其他功能</h3></div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <p class="text-gray-500 text-center text-2xl">建置中</p>
+                </div>
+            </div>
+            <div id="settings-page" class="page">
+                <div class="page-header"><h3>系統設定</h3></div>
+                <div class="sub-tabs" id="settings-sub-tabs">
+                    <div class="sub-tab active" data-tab="community-name-settings">社區名稱</div>
+                    <div class="sub-tab" data-tab="preparer-settings">製表人</div>
+                    <div class="sub-tab" data-tab="category-settings">交易類別</div>
+                    <div class="sub-tab" data-tab="bank-settings">銀行設定</div>
+                    <div class="sub-tab" data-tab="supplier-settings">供應商</div>
+                </div>
+                 <div id="settings-contents">
+                    <div id="community-name-settings-content" class="tab-content active">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4 space-y-4">
+                            <div>
+                                <label for="community-name-input-page" class="block text-gray-700 text-sm font-bold mb-2">社區名稱</label>
+                                <input type="text" id="community-name-input-page" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            </div>
+                            <div>
+                                <label for="community-logo-url-input" class="block text-gray-700 text-sm font-bold mb-2">Logo 圖片連結</label>
+                                <input type="text" id="community-logo-url-input" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <p class="text-xs text-gray-500 mt-1">建議圖片規格為 120px x 60px。</p>
+                            </div>
+                             <div>
+                                <label for="currency-unit-select" class="block text-gray-700 text-sm font-bold mb-2">金額單位切換</label>
+                                <select id="currency-unit-select" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700">
+                                    <option value="$">$</option>
+                                    <option value="NT$">NT$</option>
+                                    <option value="新台幣">新台幣</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="date-format-select" class="block text-gray-700 text-sm font-bold mb-2">日期格式切換</label>
+                                <select id="date-format-select" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700">
+                                    <option value="gregorian">西元 (YYYY-MM-DD)</option>
+                                    <option value="roc">民國 (民國YYY年MM月DD日)</option>
+                                </select>
+                            </div>
+                             <button id="save-community-settings-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">
+                                儲存設定
+                            </button>
+                        </div>
+                    </div>
+                    <div id="preparer-settings-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+                            <ul id="preparers-list" class="space-y-2 mb-4"></ul>
+                             <div class="flex items-end gap-4">
+                                <div class="flex-grow">
+                                    <label for="new-preparer-name-input" class="block text-gray-700 text-sm font-bold mb-2">新增製表人姓名</label>
+                                    <input type="text" id="new-preparer-name-input" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700" placeholder="輸入姓名">
+                                </div>
+                                <button id="add-preparer-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    新增
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="category-settings-content" class="tab-content">
+                        <div id="category-settings-container-page" class="bg-white rounded-xl shadow-lg p-6 mt-4"></div>
+                    </div>
+                    <div id="bank-settings-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+                            <ul id="bank-accounts-list-page" class="space-y-2 mb-4"></ul>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <input type="text" id="new-bank-account-name-input-page" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700" placeholder="新增銀行名稱">
+                                <input type="text" id="new-bank-account-number-input-page" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700" placeholder="新增銀行帳號">
+                                <input type="number" id="new-bank-account-balance-input-page" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700" placeholder="期初金額">
+                                <button id="add-bank-account-btn-page" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    新增
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="supplier-settings-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+                            <div class="flex justify-end mb-4">
+                                <button id="add-supplier-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i>新增供應商
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="transaction-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>編號</th>
+                                            <th>供應商名稱</th>
+                                            <th>聯絡人</th>
+                                            <th>電話</th>
+                                            <th>地址</th>
+                                            <th>服務項目</th>
+                                            <th>類型</th>
+                                            <th>類別</th>
+                                            <th>備註</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suppliers-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add Transaction Modal -->
+    <div id="add-transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-2xl font-bold">新增交易</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 transition-colors duration-200 text-3xl">&times;</button>
+            </div>
+            <form id="daily-form" class="space-y-4">
+                <div>
+                    <label for="daily-date" class="block text-gray-700 text-sm font-bold mb-1">日期</label>
+                    <input type="date" id="daily-date" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="daily-object" class="block text-gray-700 text-sm font-bold mb-1">對象</label>
+                    <input type="text" id="daily-object" list="objects-datalist" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <datalist id="objects-datalist"></datalist>
+                </div>
+                <div>
+                    <label for="daily-type" class="block text-gray-700 text-sm font-bold mb-1">類型</label>
+                    <select id="daily-type" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="fixed_income">固定收入</option>
+                        <option value="other_income">其他收入</option>
+                        <option value="fixed_expense">固定支出</option>
+                        <option value="other_expense">其他支出</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="daily-category" class="block text-gray-700 text-sm font-bold mb-1">類別</label>
+                    <select id="daily-category" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </select>
+                </div>
+                <div>
+                    <label for="daily-month" class="block text-gray-700 text-sm font-bold mb-1">月份</label>
+                    <input type="month" id="daily-month" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="daily-amount" class="block text-gray-700 text-sm font-bold mb-1">金額</label>
+                    <input type="number" id="daily-amount" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="daily-method" class="block text-gray-700 text-sm font-bold mb-1">收支方式</label>
+                    <select id="daily-method" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </select>
+                </div>
+                <div>
+                    <label for="daily-description" class="block text-gray-700 text-sm font-bold mb-1">摘要</label>
+                    <input type="text" id="daily-description" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">
+                    儲存交易
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Supplier Modal -->
+    <div id="add-supplier-modal" class="modal">
+        <div class="modal-content">
+             <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 id="supplier-modal-title" class="text-2xl font-bold">新增供應商</h3>
+                <button id="close-supplier-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <form id="supplier-form" class="space-y-4">
+                <input type="hidden" id="supplier-id">
+                <div><label for="supplier-name" class="block text-sm font-bold">供應商名稱</label><input type="text" id="supplier-name" class="shadow border rounded w-full py-2 px-3" required></div>
+                <div><label for="supplier-contact" class="block text-sm font-bold">聯絡人</label><input type="text" id="supplier-contact" class="shadow border rounded w-full py-2 px-3"></div>
+                <div><label for="supplier-phone" class="block text-sm font-bold">電話</label><input type="text" id="supplier-phone" class="shadow border rounded w-full py-2 px-3"></div>
+                <div><label for="supplier-address" class="block text-sm font-bold">地址</label><input type="text" id="supplier-address" class="shadow border rounded w-full py-2 px-3"></div>
+                <div><label for="supplier-service" class="block text-sm font-bold">服務項目</label><input type="text" id="supplier-service" class="shadow border rounded w-full py-2 px-3"></div>
+                <div>
+                    <label for="supplier-type" class="block text-sm font-bold">類型</label>
+                    <select id="supplier-type" class="shadow border rounded w-full py-2 px-3">
+                        <option value="fixed_expense">固定支出</option>
+                        <option value="other_expense">其他支出</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="supplier-category" class="block text-sm font-bold">類別</label>
+                    <select id="supplier-category" class="shadow border rounded w-full py-2 px-3"></select>
+                </div>
+                <div><label for="supplier-note" class="block text-sm font-bold">備註</label><input type="text" id="supplier-note" class="shadow border rounded w-full py-2 px-3"></div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">儲存</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Fixed Deposit Modal -->
+    <div id="fixed-deposit-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="fd-modal-title" class="text-2xl font-bold mb-4">新增定存</h3>
+            <form id="fixed-deposit-form">
+                <input type="hidden" id="fd-id">
+                <div class="mb-4">
+                    <label for="fd-bank" class="block text-gray-700 text-sm font-bold mb-2">銀行別</label>
+                    <input type="text" id="fd-bank" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="fd-summary" class="block text-gray-700 text-sm font-bold mb-2">摘要</label>
+                    <input type="text" id="fd-summary" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label for="fd-start-date" class="block text-gray-700 text-sm font-bold mb-2">起始日期</label>
+                    <input type="date" id="fd-start-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="fd-end-date" class="block text-gray-700 text-sm font-bold mb-2">到期日期</label>
+                    <input type="date" id="fd-end-date" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="fd-amount" class="block text-gray-700 text-sm font-bold mb-2">金額</label>
+                    <input type="number" id="fd-amount" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-6">
+                    <label for="fd-note" class="block text-gray-700 text-sm font-bold mb-2">備註</label>
+                    <textarea id="fd-note" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">儲存</button>
+                    <button type="button" id="close-fd-modal" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Resident Modal -->
+    <div id="add-resident-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-2xl font-bold">新增住戶</h3>
+                <button id="close-resident-modal-btn" class="text-gray-500 hover:text-gray-800 transition-colors duration-200 text-3xl">&times;</button>
+            </div>
+            <form id="resident-form" class="space-y-4">
+                <div>
+                    <label for="resident-id" class="block text-gray-700 text-sm font-bold mb-1">編號</label>
+                    <input type="text" id="resident-id" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="resident-household-number" class="block text-gray-700 text-sm font-bold mb-1">戶號</label>
+                    <input type="text" id="resident-household-number" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="resident-name" class="block text-gray-700 text-sm font-bold mb-1">姓名</label>
+                    <input type="text" id="resident-name" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="resident-address" class="block text-gray-700 text-sm font-bold mb-1">地址</label>
+                    <input type="text" id="resident-address" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                 <div>
+                    <label for="resident-population-count" class="block text-gray-700 text-sm font-bold mb-1">住家人口總數</label>
+                    <input type="number" id="resident-population-count" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="resident-population-control" class="block text-gray-700 text-sm font-bold mb-1">人口管制戶</label>
+                    <select id="resident-population-control" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                </div>
+                 <div>
+                    <label for="resident-order-control" class="block text-gray-700 text-sm font-bold mb-1">秩序管制戶</label>
+                    <select id="resident-order-control" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                </div>
+                <div>
+                    <label for="resident-management-fee" class="block text-gray-700 text-sm font-bold mb-1">設定每月管理費金額</label>
+                    <input type="number" id="resident-management-fee" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div>
+                    <label for="resident-note" class="block text-gray-700 text-sm font-bold mb-1">備註</label>
+                    <input type="text" id="resident-note" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">
+                    儲存住戶
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="custom-modal hidden">
+        <div class="modal-content">
+            <h3 id="confirm-title" class="text-lg font-bold mb-4"></h3>
+            <p id="confirm-message" class="mb-4"></p>
+            <div class="flex justify-end gap-4">
+                <button id="cancel-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">取消</button>
+                <button id="confirm-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const navItems = document.querySelectorAll('.nav-item');
+            const pages = document.querySelectorAll('.page');
+            const titlePart1El = document.getElementById('title-part1');
+
+            const typeMap = {
+                'fixed_income': '固定收入',
+                'other_income': '其他收入',
+                'fixed_expense': '固定支出',
+                'other_expense': '其他支出',
+            };
+            
+            let data = {
+                customCommunityName: '西北社區',
+                communityLogoUrl: 'https://static.wixstatic.com/media/6148f9_56377cef73c1498f95a2c3057b89f2ed~mv2.png',
+                currencySymbol: '$',
+                dateFormat: 'gregorian', // 'gregorian' or 'roc'
+                preparers: ['管理員'],
+                dailyTransactions: [],
+                todos: [],
+                is12Hour: false,
+                bankAccounts: [
+                    { name: '定存', type: 'fixed' },
+                    { name: '零用金', type: 'current', beginningBalance: 0, accountNumber: '' },
+                    { name: '郵局', type: 'current', beginningBalance: 0, accountNumber: '' }
+                ],
+                fixedDeposits: [],
+                residents: [],
+                suppliers: [],
+                categories: {
+                    'fixed_income': ['管理費', '停車費'],
+                    'other_income': ['社區活動收入', '雜項收入'],
+                    'fixed_expense': ['保全薪資', '清潔費', '機電保養'],
+                    'other_expense': ['設備維修', '行政支出']
+                },
+                populationControlOptions: ['一般戶','空屋戶', '承租戶', '銀髮族', '獨居戶'],
+                orderControlOptions: ['一般戶','寵物戶', '噪音戶', '臭氣戶', '違規戶']
+            };
+
+            let dailySerialCounter = 0;
+            let supplierSerialCounter = 0;
+            
+            function generateDailySerial(date) {
+                const now = new Date(date);
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                dailySerialCounter++;
+                const counter = String(dailySerialCounter).padStart(4, '0');
+                return `${year}${month}${day}${counter}`;
+            }
+
+            function generateSupplierSerial() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                supplierSerialCounter++;
+                const counter = String(supplierSerialCounter).padStart(4, '0');
+                return `Z${year}${month}${day}${counter}`;
+            }
+
+            function formatCurrency(amount) {
+                if (typeof amount !== 'number') return amount;
+                return `${data.currencySymbol}${amount.toLocaleString()}`;
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+
+                if (data.dateFormat === 'roc') {
+                    const rocYear = date.getFullYear() - 1911;
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `民國${rocYear}年${month}月${day}日`;
+                } else {
+                    return date.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+                }
+            }
+
+
+            function saveData() {
+                Object.keys(data).forEach(key => {
+                    localStorage.setItem(key, JSON.stringify(data[key]));
+                });
+            }
+
+            function loadData() {
+                Object.keys(data).forEach(key => {
+                    const item = localStorage.getItem(key);
+                    if (item !== null) {
+                        try {
+                            data[key] = JSON.parse(item);
+                        } catch (e) {
+                            console.error(`Error parsing localStorage item ${key}:`, e);
+                        }
+                    }
+                });
+                if (!Array.isArray(data.todos)) data.todos = [];
+                if (!Array.isArray(data.preparers) || data.preparers.length === 0) data.preparers = ['管理員'];
+            }
+            
+            function showPage(pageName) {
+                pages.forEach(page => page.classList.remove('active'));
+                const activePage = document.getElementById(`${pageName}-page`);
+                if (activePage) activePage.classList.add('active');
+            }
+
+            function updateCommunityLogo() {
+                document.getElementById('login-logo').src = data.communityLogoUrl;
+                document.getElementById('sidebar-logo').src = data.communityLogoUrl;
+            }
+
+            function renderCustomTitle() {
+                titlePart1El.textContent = data.customCommunityName;
+            }
+            
+            function reRenderAllPages() {
+                updateOverviewData();
+                renderDailyTransactions();
+                renderBankPage();
+                renderResidentsList();
+                renderReportPage();
+            }
+
+            function updateOverviewData() {
+                const now = new Date();
+                const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                const monthMM = String(now.getMonth() + 1);
+                document.getElementById('current-month-income').textContent = monthMM;
+                document.getElementById('current-month-expense').textContent = monthMM;
+
+                let monthlyIncome = 0;
+                let monthlyExpense = 0;
+                data.dailyTransactions.forEach(t => {
+                    if (t.date.startsWith(currentMonth)) {
+                        if (t.amount > 0) monthlyIncome += t.amount;
+                        else monthlyExpense += t.amount;
+                    }
+                });
+                document.getElementById('monthly-income').textContent = formatCurrency(monthlyIncome);
+                document.getElementById('monthly-expense').textContent = formatCurrency(Math.abs(monthlyExpense));
+
+                let fixedDepositTotal = data.fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
+                
+                const cashAccount = data.bankAccounts.find(acc => acc.name === '零用金');
+                let cashTotal = cashAccount ? cashAccount.beginningBalance : 0;
+                cashTotal += data.dailyTransactions.filter(t => t.method === '零用金').reduce((sum, t) => sum + t.amount, 0);
+                
+                let otherBanksTotal = 0;
+                data.bankAccounts.filter(acc => acc.type === 'current' && acc.name !== '零用金').forEach(acc => {
+                    otherBanksTotal += acc.beginningBalance;
+                    otherBanksTotal += data.dailyTransactions.filter(t => t.method === acc.name).reduce((sum, t) => sum + t.amount, 0);
+                });
+
+                document.getElementById('total-fixed-deposit').textContent = formatCurrency(fixedDepositTotal);
+                document.getElementById('total-cash').textContent = formatCurrency(cashTotal);
+                document.getElementById('total-banks').textContent = formatCurrency(otherBanksTotal);
+                
+                let totalPrepaid = data.residents.reduce((sum, r) => sum + (r.prepaidAmount || 0), 0);
+                document.getElementById('total-prepaid').textContent = formatCurrency(totalPrepaid);
+                
+                document.getElementById('total-receivable').textContent = formatCurrency(0);
+                document.getElementById('total-payable').textContent = formatCurrency(0); 
+
+                document.getElementById('total-residents').textContent = `${data.residents.length} 戶`;
+
+                const overdueResidents = data.residents.filter(r => getPaymentStatus(r, currentMonth).includes('未繳'));
+                document.getElementById('overdue-residents-count').textContent = `${overdueResidents.length} 戶`;
+                document.getElementById('overdue-residents-list').innerHTML = overdueResidents.map(r => `<span class="overdue-resident-item">${r.householdNumber}</span>`).join('');
+            }
+
+            function updateClock() {
+                const now = new Date();
+                const dateEl = document.getElementById('overview-date');
+                const timeEl = document.getElementById('overview-time');
+                if(!dateEl || !timeEl) return;
+
+                dateEl.textContent = formatDate(now.toISOString().split('T')[0]);
+                
+                if (data.is12Hour) {
+                    let hours = now.getHours();
+                    const ampm = hours >= 12 ? '下午' : '上午';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12;
+                    timeEl.textContent = `${ampm} ${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                } else {
+                     timeEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                }
+            }
+            
+            function renderTodos(listElementId) {
+                const listEl = document.getElementById(listElementId);
+                if (!listEl) return;
+                listEl.innerHTML = '';
+                const todosToRender = data.todos.filter(t => !t.done);
+                if (todosToRender.length === 0) {
+                    listEl.innerHTML = `<li class="text-gray-400">沒有待辦事項</li>`;
+                } else {
+                    todosToRender.forEach(todo => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-md';
+                        li.innerHTML = `<span>${todo.text}</span>`;
+                        listEl.appendChild(li);
+                    });
+                }
+            }
+
+            function renderOverviewPage() {
+                showPage('overview');
+                updateOverviewData();
+                updateClock();
+                setInterval(updateClock, 1000);
+                renderTodos('overview-todo-list');
+            }
+
+            function handlePeriodFilterChange() {
+                const selectedPeriod = document.querySelector('input[name="period-filter"]:checked').value;
+                document.getElementById('date-filter-input').classList.toggle('hidden', selectedPeriod !== 'day');
+                document.getElementById('month-filter-input').classList.toggle('hidden', selectedPeriod !== 'month');
+                document.getElementById('year-filter-input').classList.toggle('hidden', selectedPeriod !== 'year');
+
+                if (selectedPeriod === 'day' && !document.getElementById('date-filter-input').value) {
+                    document.getElementById('date-filter-input').value = new Date().toISOString().split('T')[0];
+                } else if (selectedPeriod === 'month' && !document.getElementById('month-filter-input').value) {
+                    const now = new Date();
+                    document.getElementById('month-filter-input').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                } else if (selectedPeriod === 'year' && !document.getElementById('year-filter-input').value) {
+                    document.getElementById('year-filter-input').value = new Date().getFullYear();
+                }
+                renderDailyTransactions();
+            }
+            
+            function setupDailyPageTabs() {
+                const pageElement = document.getElementById('daily-page');
+                const dailyTabs = pageElement.querySelectorAll('#daily-page-sub-tabs .sub-tab');
+                const dailyContents = pageElement.querySelectorAll('#daily-page-tab-contents .tab-content');
+                const transactionsContent = document.getElementById('transactions-daily-tab-content').innerHTML;
+
+                dailyTabs.forEach(tab => {
+                    const contentId = tab.dataset.tab + '-tab-content';
+                    const contentEl = document.getElementById(contentId);
+                    
+                    if (tab.dataset.tab !== 'transactions-daily') {
+                         contentEl.innerHTML = transactionsContent;
+                    }
+                    
+                    tab.addEventListener('click', () => {
+                        dailyTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        dailyContents.forEach(c => c.classList.remove('active'));
+                        contentEl.classList.add('active');
+                         if (tab.dataset.tab === 'transactions-daily') {
+                            renderDailyTransactions();
+                         }
+                    });
+                });
+            }
+
+
+            function renderDailyPage() {
+                showPage('daily');
+                const pageElement = document.getElementById('daily-page');
+                
+                if (!pageElement.dataset.listenersAttached) {
+                    setupDailyPageTabs();
+                    
+                    // Attach listeners to the original content, they will be cloned
+                    const originalContent = document.getElementById('transactions-daily-tab-content');
+
+                    originalContent.querySelector('#import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-input').click());
+                    originalContent.querySelector('#import-csv-input').addEventListener('change', handleImportDailyCSV);
+                    originalContent.querySelector('#export-csv-btn').addEventListener('click', () => exportData('csv'));
+                    originalContent.querySelector('#export-pdf-btn').addEventListener('click', () => exportData('pdf'));
+                    originalContent.querySelectorAll('input[name="period-filter"]').forEach(radio => radio.addEventListener('change', handlePeriodFilterChange));
+                    ['date-filter-input', 'month-filter-input', 'year-filter-input', 'sort-direction-select'].forEach(id => {
+                        originalContent.querySelector(`#${id}`).addEventListener('change', renderDailyTransactions);
+                    });
+                    originalContent.querySelector('#add-transaction-btn').addEventListener('click', openAddTransactionModal);
+                    
+                    originalContent.querySelector('#delete-selected-btn').addEventListener('click', handleDeleteSelectedTransactions);
+                    originalContent.querySelector('#select-all-transactions-checkbox').addEventListener('change', (e) => {
+                        document.querySelectorAll('.transaction-checkbox').forEach(checkbox => {
+                            checkbox.checked = e.target.checked;
+                        });
+                    });
+
+                    pageElement.dataset.listenersAttached = 'true';
+                }
+                
+                handlePeriodFilterChange();
+                renderDailyTransactions();
+            }
+            
+            function populateObjectDatalist() {
+                const datalist = document.getElementById('objects-datalist');
+                if (!datalist) return;
+                datalist.innerHTML = '';
+                const residents = data.residents.map(r => r.householdNumber);
+                const suppliers = data.suppliers.map(s => s.name);
+                const allOptions = [...new Set([...residents, ...suppliers])];
+                allOptions.forEach(option => {
+                    datalist.innerHTML += `<option value="${option}"></option>`;
+                });
+            }
+
+            function populateCategorySelect() {
+                const typeSelect = document.getElementById('daily-type');
+                const categorySelect = document.getElementById('daily-category');
+                categorySelect.innerHTML = '';
+                (data.categories[typeSelect.value] || []).forEach(cat => {
+                    categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+            }
+            
+            function populateDailyMethodSelect() {
+                const select = document.getElementById('daily-method');
+                select.innerHTML = '';
+                data.bankAccounts.filter(acc => acc.type !== 'fixed').forEach(account => {
+                    select.innerHTML += `<option value="${account.name}">${account.name}</option>`;
+                });
+            }
+
+            function handleTransactionDelete(event) {
+                const transactionId = parseInt(event.target.closest('button').dataset.id);
+                showConfirmModal(`確定要刪除這筆交易紀錄嗎？`, () => {
+                    data.dailyTransactions = data.dailyTransactions.filter(t => t.id !== transactionId);
+                    saveData();
+                    renderDailyTransactions();
+                    updateOverviewData();
+                });
+            }
+            
+            function openAddTransactionModal() {
+                document.getElementById('daily-form').reset();
+                const today = new Date().toISOString();
+                document.getElementById('daily-date').value = today.split('T')[0];
+                document.getElementById('daily-month').value = today.substring(0, 7);
+                populateCategorySelect();
+                populateDailyMethodSelect();
+                populateObjectDatalist();
+                document.getElementById('add-transaction-modal').style.display = 'flex';
+            }
+
+            function handleDailyFormSubmit(event) {
+                event.preventDefault();
+                const type = document.getElementById('daily-type').value;
+                const amount = parseFloat(document.getElementById('daily-amount').value);
+                
+                const newTransaction = {
+                    id: Date.now(),
+                    serial: generateDailySerial(document.getElementById('daily-date').value),
+                    date: document.getElementById('daily-date').value,
+                    object: document.getElementById('daily-object').value,
+                    type: type,
+                    category: document.getElementById('daily-category').value,
+                    month: document.getElementById('daily-month').value,
+                    amount: type.includes('expense') ? -Math.abs(amount) : Math.abs(amount),
+                    method: document.getElementById('daily-method').value,
+                    description: document.getElementById('daily-description').value
+                };
+
+                data.dailyTransactions.push(newTransaction);
+                saveData();
+                updatePaymentStatusForResident(newTransaction.object, newTransaction.date.substring(0, 7));
+                
+                document.getElementById('add-transaction-modal').style.display = 'none';
+                renderDailyTransactions();
+                updateOverviewData();
+            }
+
+            function renderDailyTransactions() {
+                const container = document.querySelector('#daily-page-tab-contents .tab-content.active');
+                if (!container) return;
+                
+                const tbody = container.querySelector('.transaction-table tbody');
+                const noTransactionsMessage = container.querySelector('#no-transactions-message');
+                const sortDirection = container.querySelector('#sort-direction-select').value;
+                
+                const checkedRadio = container.querySelector('input[name="period-filter"]:checked');
+                if (!checkedRadio) {
+                    const dayRadio = container.querySelector('input[name="period-filter"][value="day"]');
+                    if (dayRadio) dayRadio.checked = true;
+                }
+                const selectedPeriod = container.querySelector('input[name="period-filter"]:checked').value;
+
+                const titlePrefixMap = { day: '當日', month: '當月', year: '當年' };
+                const titlePrefix = titlePrefixMap[selectedPeriod] || '當日';
+                container.querySelector('#income-title').textContent = `${titlePrefix}總收入`;
+                container.querySelector('#expense-title').textContent = `${titlePrefix}總支出`;
+
+                let filterValue;
+                if (selectedPeriod === 'day') filterValue = container.querySelector('#date-filter-input').value;
+                else if (selectedPeriod === 'month') filterValue = container.querySelector('#month-filter-input').value;
+                else filterValue = container.querySelector('#year-filter-input').value;
+
+                const filtered = data.dailyTransactions
+                    .filter(t => t.date && t.date.startsWith(filterValue))
+                    .sort((a, b) => {
+                        const dateComparison = new Date(b.date) - new Date(a.date);
+                        return sortDirection === 'desc' ? (dateComparison || b.id - a.id) : (-dateComparison || a.id - b.id);
+                    });
+                
+                tbody.innerHTML = '';
+                let totalIncome = 0;
+                let totalExpense = 0;
+                filtered.forEach(t => {
+                    t.amount > 0 ? (totalIncome += t.amount) : (totalExpense += t.amount);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><input type="checkbox" class="transaction-checkbox" data-id="${t.id}"></td>
+                            <td>${t.serial}</td>
+                            <td>${formatDate(t.date)}</td>
+                            <td>${t.object}</td>
+                            <td>${typeMap[t.type]}</td>
+                            <td>${t.category}</td>
+                            <td>${t.month}</td>
+                            <td class="font-bold ${t.amount > 0 ? 'income-text' : 'expense-text'}">${formatCurrency(t.amount)}</td>
+                            <td>${t.method}</td>
+                            <td>${t.description}</td>
+                            <td><button data-id="${t.id}" class="delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button></td>
+                        </tr>`;
+                });
+
+                container.querySelector('#total-income').textContent = formatCurrency(totalIncome);
+                container.querySelector('#total-expense').textContent = formatCurrency(Math.abs(totalExpense));
+                noTransactionsMessage.classList.toggle('hidden', filtered.length > 0);
+                tbody.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleTransactionDelete));
+                container.querySelector('#select-all-transactions-checkbox').checked = false;
+            }
+            
+            function handleDeleteSelectedTransactions() {
+                const idsToDelete = [...document.querySelectorAll('.transaction-checkbox:checked')].map(cb => parseInt(cb.dataset.id));
+                if (idsToDelete.length === 0) {
+                    showSuccessMessage("請先選取要刪除的交易。", true);
+                    return;
+                }
+                showConfirmModal(`確定要刪除選取的 ${idsToDelete.length} 筆交易嗎？`, () => {
+                    data.dailyTransactions = data.dailyTransactions.filter(t => !idsToDelete.includes(t.id));
+                    saveData();
+                    renderDailyTransactions();
+                    updateOverviewData();
+                });
+            }
+
+            function getFilenameBase() {
+                 const selectedPeriod = document.querySelector('input[name="period-filter"]:checked').value;
+                 let periodString;
+                 if (selectedPeriod === 'day') periodString = document.getElementById('date-filter-input').value;
+                 else if (selectedPeriod === 'month') periodString = document.getElementById('month-filter-input').value;
+                 else periodString = document.getElementById('year-filter-input').value;
+                 return `${data.customCommunityName}_${periodString}`;
+            }
+
+            async function exportData(format) {
+                const filenameBase = getFilenameBase();
+                const periodString = filenameBase.split('_')[1];
+                const headers = ["編號", "日期", "對象", "類型", "類別", "月份", "金額", "收支方式", "摘要"];
+                const rowsData = data.dailyTransactions
+                    .filter(t => t.date && t.date.startsWith(periodString))
+                    .map(t => [t.serial, formatDate(t.date), t.object, typeMap[t.type], t.category, t.month, t.amount, t.method, t.description]);
+                const title = `${filenameBase}_收支表`;
+
+                if (format === 'csv') {
+                    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rowsData.map(e => e.join(","))].join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `${title}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                } else if (format === 'pdf') {
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.style.cssText = 'position:absolute; left:-9999px; width:210mm; background:white; padding:10mm; box-sizing:border-box; font-family: "Inter", sans-serif;';
+
+                    let tableHTML = `<h2 style="text-align:center; font-size: 16pt; margin-bottom: 20px;">${title}</h2>
+                        <table style="width:100%; border-collapse:collapse; font-size: 9pt; table-layout: auto;">
+                            <thead><tr>${headers.map(h => `<th style="border:1px solid #333; padding: 4px; background-color:#f2f2f2; font-weight: bold;">${h}</th>`).join('')}</tr></thead>
+                            <tbody>${rowsData.map(row => `<tr>${row.map((cell, i) => `<td style="border:1px solid #333; padding: 4px; word-wrap:break-word; text-align: ${i===6 ? 'right' : 'left'}; ${i===6 ? (parseFloat(row[i]) > 0 ? 'color:green;' : 'color:red;') : ''}">${i===6 ? formatCurrency(cell) : cell}</td>`).join('')}</tr>`).join('')}</tbody>
+                        </table>`;
+
+                    pdfContainer.innerHTML = tableHTML;
+                    document.body.appendChild(pdfContainer);
+
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const canvas = await html2canvas(pdfContainer, { scale: 3, useCORS: true });
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgProps = pdf.getImageProperties(imgData);
+                        
+                        const margin = 15;
+                        const pdfWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        const pageHeight = pdf.internal.pageSize.getHeight() - 2 * margin;
+                        
+                        let heightLeft = pdfHeight;
+                        let position = 0;
+
+                        pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight);
+                        heightLeft -= pageHeight;
+
+                        while (heightLeft > 0) {
+                            position = heightLeft - pdfHeight;
+                            pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', margin, position + margin, pdfWidth, pdfHeight);
+                            heightLeft -= pageHeight;
+                        }
+                        
+                        pdf.save(`${title}.pdf`);
+
+                    } catch (error) {
+                        console.error("每日收支 PDF 匯出失敗:", error);
+                        showSuccessMessage('匯出 PDF 失敗', true);
+                    } finally {
+                        document.body.removeChild(pdfContainer);
+                    }
+                }
+            }
+
+
+            function handleImportDailyCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let content = e.target.result.replace(/\r/g, "");
+                    if (content.charCodeAt(0) === 0xFEFF) content = content.substring(1);
+                    const lines = content.split('\n').filter(line => line.trim() !== '');
+                    const typeKeyMap = Object.fromEntries(Object.entries(typeMap).map(([k, v]) => [v, k]));
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        if (values.length >= 8) { // Assuming old format without month
+                            data.dailyTransactions.push({
+                                id: Date.now() + i,
+                                serial: values[0],
+                                date: values[1],
+                                object: values[2],
+                                type: typeKeyMap[values[3]] || 'other_expense',
+                                category: values[4],
+                                month: values[1] ? values[1].substring(0, 7) : '',
+                                amount: parseFloat(values[5]),
+                                method: values[6],
+                                description: values[7]
+                            });
+                        }
+                    }
+                    saveData();
+                    renderDailyTransactions();
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            function renderBankPage() {
+                showPage('bank');
+                renderBankTabs();
+            }
+            
+            function renderBankTabs() {
+                const bankTabsContainer = document.getElementById('bank-tabs');
+                bankTabsContainer.innerHTML = '';
+                data.bankAccounts.forEach((account, index) => {
+                    const tab = document.createElement('div');
+                    tab.className = `sub-tab ${index === 0 ? 'active' : ''}`;
+                    tab.textContent = account.name;
+                    tab.dataset.account = account.name;
+                    tab.addEventListener('click', () => {
+                        bankTabsContainer.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        if (account.type === 'fixed') renderFixedDepositTable();
+                        else renderBankAccountDetailsTable(account.name);
+                    });
+                    bankTabsContainer.appendChild(tab);
+                });
+                if (data.bankAccounts.length > 0) bankTabsContainer.querySelector('.sub-tab').click();
+            }
+
+            function renderFixedDepositTable() {
+                const bankContent = document.getElementById('bank-content');
+                let totalAmount = data.fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0);
+                let tableHtml = `<div class="flex justify-between items-center mb-4">
+                                     <h3 class="text-xl font-bold">定存明細</h3>
+                                     <button id="add-fd-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新增定存</button>
+                                 </div>
+                                 <div class="overflow-x-auto">
+                                 <table class="transaction-table"><thead><tr><th>編號</th><th>銀行別</th><th>摘要</th><th>起始日期</th><th>到期日期</th><th>金額</th><th>備註</th><th>操作</th></tr></thead><tbody>`;
+                
+                if (data.fixedDeposits.length > 0) {
+                     data.fixedDeposits.forEach((fd, index) => {
+                        let noteContent = fd.note || '';
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (fd.endDate) {
+                            const endDate = new Date(fd.endDate);
+                            const diffTime = endDate - today;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 0 && diffDays <= 30) {
+                                noteContent += `${noteContent ? '<br>' : ''}<span class="text-red-500 font-bold">到期倒數: ${diffDays} 天</span>`;
+                            }
+                        }
+                        tableHtml += `<tr><td>${index + 1}</td><td>${fd.bank}</td><td>${fd.summary}</td><td>${formatDate(fd.startDate)}</td><td>${formatDate(fd.endDate)}</td><td>${formatCurrency(fd.amount)}</td><td>${noteContent}</td>
+                                    <td><button data-id="${fd.id}" class="edit-fd-btn text-blue-500 mr-2"><i class="fas fa-edit"></i></button><button data-id="${fd.id}" class="delete-fd-btn text-red-500"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                    });
+                } else {
+                    tableHtml += `<tr><td colspan="8" class="text-center text-gray-500">目前沒有定存紀錄。</td></tr>`;
+                }
+                tableHtml += `</tbody></table></div><div class="text-right mt-4 font-bold text-lg">定存總計: ${formatCurrency(totalAmount)}</div>`;
+                bankContent.innerHTML = tableHtml;
+
+                bankContent.querySelector('#add-fd-btn').addEventListener('click', () => openFdModal(null));
+                bankContent.querySelectorAll('.edit-fd-btn').forEach(btn => btn.addEventListener('click', (e) => openFdModal(e.target.closest('button').dataset.id)));
+                bankContent.querySelectorAll('.delete-fd-btn').forEach(btn => btn.addEventListener('click', handleDeleteFd));
+            }
+
+            function openFdModal(id = null) {
+                const modal = document.getElementById('fixed-deposit-modal');
+                const form = document.getElementById('fixed-deposit-form');
+                form.reset();
+                document.getElementById('fd-id').value = '';
+
+                if(id) {
+                    const fd = data.fixedDeposits.find(f => f.id == id);
+                    if(fd) {
+                        document.getElementById('fd-modal-title').textContent = '編輯定存';
+                        Object.keys(fd).forEach(key => {
+                           const formKey = `fd-${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
+                           if(form[formKey]) form[formKey].value = fd[key];
+                        });
+                    }
+                } else {
+                    document.getElementById('fd-modal-title').textContent = '新增定存';
+                }
+                modal.style.display = 'flex';
+            }
+
+            function handleDeleteFd(event) {
+                 const id = parseInt(event.target.closest('button').dataset.id);
+                 showConfirmModal('確定要刪除這筆定存嗎?', () => {
+                    data.fixedDeposits = data.fixedDeposits.filter(fd => fd.id !== id);
+                    saveData();
+                    renderFixedDepositTable();
+                    updateOverviewData();
+                 });
+            }
+            
+            document.getElementById('fixed-deposit-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('fd-id').value;
+                const newFd = {
+                    id: id ? parseInt(id) : Date.now(),
+                    bank: document.getElementById('fd-bank').value,
+                    summary: document.getElementById('fd-summary').value,
+                    startDate: document.getElementById('fd-start-date').value,
+                    endDate: document.getElementById('fd-end-date').value,
+                    amount: parseFloat(document.getElementById('fd-amount').value),
+                    note: document.getElementById('fd-note').value,
+                };
+                if(id) data.fixedDeposits[data.fixedDeposits.findIndex(fd => fd.id == id)] = newFd;
+                else data.fixedDeposits.push(newFd);
+                saveData();
+                renderFixedDepositTable();
+                updateOverviewData();
+                document.getElementById('fixed-deposit-modal').style.display = 'none';
+            });
+            document.getElementById('close-fd-modal').addEventListener('click', () => {
+                 document.getElementById('fixed-deposit-modal').style.display = 'none';
+            });
+
+
+            function renderBankAccountDetailsTable(accountName) {
+                const bankContent = document.getElementById('bank-content');
+                const accountDetails = data.bankAccounts.find(acc => acc.name === accountName);
+                if (!accountDetails) return;
+                
+                const transactions = data.dailyTransactions
+                    .filter(t => t.method === accountName)
+                    .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                let currentBalance = accountDetails.beginningBalance;
+                transactions.forEach(t => currentBalance += t.amount);
+
+                let tableHtml = `<div class="mb-4">
+                        <h3 class="text-2xl font-bold mb-2">帳戶明細：<span class="text-blue-600">${accountName}</span></h3>
+                        <div class="flex flex-col sm:flex-row gap-4 text-lg">
+                            <p>帳號：<span class="font-bold text-gray-700">${accountDetails.accountNumber || '無'}</span></p>
+                            <p>期初金額：<span class="font-bold text-gray-700">${formatCurrency(accountDetails.beginningBalance)}</span></p>
+                        </div></div>
+                    <div class="overflow-x-auto">
+                    <table class="transaction-table table-fixed">
+                        <thead><tr><th style="width: 12.5%">日期</th><th style="width: 12.5%">類型</th><th style="width: 12.5%">類別</th><th style="width: 12.5%">對象</th><th style="width: 12.5%">摘要</th><th style="width: 12.5%">支出金額</th><th style="width: 12.5%">收入金額</th><th style="width: 12.5%">餘額</th></tr></thead><tbody>`;
+                
+                let runningBalance = accountDetails.beginningBalance;
+                transactions.forEach(t => {
+                    runningBalance += t.amount;
+                    tableHtml += `<tr><td>${formatDate(t.date)}</td><td>${typeMap[t.type]}</td><td>${t.category}</td><td>${t.object}</td><td>${t.description}</td><td class="expense-text">${t.amount < 0 ? formatCurrency(Math.abs(t.amount)) : '-'}</td><td class="income-text">${t.amount > 0 ? formatCurrency(t.amount) : '-'}</td><td class="font-bold">${formatCurrency(runningBalance)}</td></tr>`;
+                });
+                if (transactions.length === 0) {
+                    tableHtml += `<tr><td colspan="8" class="text-center text-gray-500">目前沒有交易紀錄。</td></tr>`;
+                }
+                tableHtml += `</tbody></table></div><div class="text-right mt-4 font-bold text-lg">${accountName}總計: ${formatCurrency(currentBalance)}</div>`;
+                bankContent.innerHTML = tableHtml;
+            }
+
+            function populateSelectWithOptions(selectElement, options, defaultLabel) {
+                selectElement.innerHTML = `<option value="all">${defaultLabel}</option>`;
+                options.forEach(opt => selectElement.innerHTML += `<option value="${opt}">${opt}</option>`);
+            }
+
+             function getPaymentStatus(resident, month) { // month is "YYYY-MM"
+                const totalPaid = data.dailyTransactions
+                    .filter(t => t.date.startsWith(month) && t.object === resident.householdNumber && t.category === '管理費')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                return totalPaid >= resident.managementFee ? `${month.substring(5)}月 已繳` : `${month.substring(5)}月 未繳`;
+            }
+
+            function updatePaymentStatusForResident(householdNumber, month) {
+                 const resident = data.residents.find(r => r.householdNumber === householdNumber);
+                 if(!resident) return;
+                 const totalPaid = data.dailyTransactions.filter(t => t.date.startsWith(month) && t.object === householdNumber && t.category === '管理費').reduce((sum, t) => sum + t.amount, 0);
+                if (totalPaid > resident.managementFee) {
+                    resident.prepaidAmount = (resident.prepaidAmount || 0) + (totalPaid - resident.managementFee);
+                }
+                saveData();
+                renderResidentsList();
+            }
+
+
+            function renderResidentListPage() {
+                showPage('residents');
+                const pageElement = document.getElementById('residents-page');
+
+                if (!pageElement.dataset.listenersAttached) {
+                    // Use document.getElementById for elements that exist once in the document
+                    document.getElementById('add-resident-btn').addEventListener('click', openAddResidentModal);
+                    document.getElementById('close-resident-modal-btn').addEventListener('click', () => document.getElementById('add-resident-modal').style.display = 'none');
+                    document.getElementById('resident-form').addEventListener('submit', handleAddResident);
+                    document.getElementById('export-residents-csv-btn').addEventListener('click', exportResidentsCSV);
+                    document.getElementById('import-residents-csv-btn').addEventListener('click', () => document.getElementById('import-residents-csv-input').click());
+                    document.getElementById('import-residents-csv-input').addEventListener('change', handleImportResidentsCSV);
+                    document.getElementById('export-residents-pdf-btn').addEventListener('click', exportResidentsPDF);
+                    document.getElementById('select-all-residents-checkbox').addEventListener('change', (e) => {
+                        document.querySelectorAll('.resident-checkbox').forEach(checkbox => {
+                            checkbox.checked = e.target.checked;
+                        });
+                    });
+                    document.getElementById('delete-selected-residents-btn').addEventListener('click', () => {
+                        const idsToDelete = [...document.querySelectorAll('.resident-checkbox:checked')].map(cb => cb.dataset.id);
+                        if (idsToDelete.length === 0) {
+                            showSuccessMessage("請先選取要刪除的住戶。", true);
+                            return;
+                        }
+                        showConfirmModal(`確定要刪除選取的 ${idsToDelete.length} 筆住戶資料嗎？`, () => {
+                            data.residents = data.residents.filter(r => !idsToDelete.includes(String(r.id)));
+                            saveData();
+                            renderResidentsList();
+                        });
+                    });
+
+                    // Use pageElement.querySelector for elements specific to this page view
+                     ['population-control-filter-select', 'order-control-filter-select', 'payment-month-filter'].forEach(id => {
+                        pageElement.querySelector(`#${id}`).addEventListener('change', renderResidentsList);
+                    });
+                    
+                    pageElement.dataset.listenersAttached = 'true';
+                }
+                populateSelectWithOptions(pageElement.querySelector('#population-control-filter-select'), data.populationControlOptions, '所有人口管制戶');
+                populateSelectWithOptions(pageElement.querySelector('#order-control-filter-select'), data.orderControlOptions, '所有秩序管制戶');
+                pageElement.querySelector('#payment-month-filter').value = new Date().toISOString().substring(0, 7);
+                renderResidentsList();
+                renderResidentControlSettings();
+            }
+            
+            function openAddResidentModal() {
+                document.getElementById('resident-form').reset();
+                populateSelectWithOptions(document.getElementById('resident-population-control'), data.populationControlOptions, '請選擇');
+                populateSelectWithOptions(document.getElementById('resident-order-control'), data.orderControlOptions, '請選擇');
+                document.getElementById('add-resident-modal').style.display = 'flex';
+            }
+
+
+            function renderResidentsList() {
+                const tbody = document.getElementById('residents-list-container');
+                const populationFilter = document.getElementById('population-control-filter-select').value;
+                const orderFilter = document.getElementById('order-control-filter-select').value;
+                const monthFilter = document.getElementById('payment-month-filter').value;
+                tbody.innerHTML = '';
+                document.getElementById('select-all-residents-checkbox').checked = false;
+
+                data.residents
+                    .filter(r => (populationFilter === 'all' || r.populationControl === populationFilter))
+                    .filter(r => (orderFilter === 'all' || r.orderControl === orderFilter))
+                    .forEach(resident => {
+                        const paymentStatus = getPaymentStatus(resident, monthFilter);
+                        const statusClass = paymentStatus.includes('未繳') ? 'text-red-500 font-bold' : 'text-green-500 font-bold';
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><input type="checkbox" class="resident-checkbox" data-id="${resident.id}"></td>
+                                <td>${resident.id}</td><td>${resident.householdNumber}</td><td>${resident.name}</td><td>${resident.address}</td><td>${resident.populationCount}</td><td>${resident.populationControl || ''}</td><td>${resident.orderControl || ''}</td><td>${formatCurrency(resident.managementFee)}</td><td class="text-blue-600">${formatCurrency(resident.prepaidAmount || 0)}</td><td class="${statusClass}">${paymentStatus}</td><td>${resident.note}</td>
+                                <td><button data-id="${resident.id}" class="delete-resident-btn text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button></td>
+                            </tr>`;
+                });
+                tbody.querySelectorAll('.delete-resident-btn').forEach(btn => btn.addEventListener('click', handleDeleteResident));
+            }
+            
+            function handleAddResident(e) {
+                e.preventDefault();
+                const newResident = {
+                    id: document.getElementById('resident-id').value,
+                    householdNumber: document.getElementById('resident-household-number').value,
+                    name: document.getElementById('resident-name').value,
+                    address: document.getElementById('resident-address').value,
+                    populationCount: parseInt(document.getElementById('resident-population-count').value) || 0,
+                    populationControl: document.getElementById('resident-population-control').value,
+                    orderControl: document.getElementById('resident-order-control').value,
+                    managementFee: parseFloat(document.getElementById('resident-management-fee').value),
+                    prepaidAmount: 0,
+                    note: document.getElementById('resident-note').value,
+                };
+                data.residents.push(newResident);
+                saveData();
+                document.getElementById('add-resident-modal').style.display = 'none';
+                renderResidentsList();
+            }
+
+            function handleDeleteResident(e) {
+                const residentId = e.target.closest('button').dataset.id;
+                showConfirmModal(`確定要刪除編號 ${residentId} 的住戶嗎？`, () => {
+                    data.residents = data.residents.filter(r => r.id !== residentId);
+                    saveData();
+                    renderResidentsList();
+                });
+            }
+
+            function exportResidentsCSV() {
+                const monthFilter = document.getElementById('payment-month-filter').value;
+                const headers = ["編號", "戶號", "姓名", "地址", "住家人口總數", "人口管制戶", "秩序管制戶", "設定每月管理費金額", "預繳金額", "繳費狀況", "備註"];
+                const rows = data.residents.map(r => [
+                    r.id, r.householdNumber, r.name, r.address, r.populationCount, r.populationControl, r.orderControl, r.managementFee, r.prepaidAmount || 0, getPaymentStatus(r, monthFilter), r.note
+                ]);
+                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(e => `"${e.join('","')}"`)].join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `${data.customCommunityName}_${monthFilter}_住戶名單.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+            
+            function handleImportResidentsCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split('\n').filter(line => line.trim() !== '');
+                    for (let i = 1; i < lines.length; i++) {
+                        const v = lines[i].split(',');
+                        if (v.length >= 9) {
+                            data.residents.push({ id: v[0], householdNumber: v[1], name: v[2], address: v[3], populationCount: parseInt(v[4])||0, populationControl: v[5], orderControl: v[6], managementFee: parseFloat(v[7])||0, prepaidAmount: parseFloat(v[8])||0, note: v.slice(9).join(',') });
+                        }
+                    }
+                    saveData();
+                    renderResidentsList();
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            async function exportResidentsPDF() {
+                const tableToExport = document.querySelector('#residents-page .transaction-table').cloneNode(true);
+                tableToExport.querySelectorAll('tr').forEach(row => {
+                    row.firstElementChild.remove(); // remove checkbox column
+                    row.lastElementChild.remove(); // remove action column
+                });
+
+
+                let title = `${data.customCommunityName} 住戶名單`;
+                const populationFilter = document.getElementById('population-control-filter-select').value;
+                const orderFilter = document.getElementById('order-control-filter-select').value;
+                if (populationFilter !== 'all') title += ` (${populationFilter})`;
+                if (orderFilter !== 'all') title += ` (${orderFilter})`;
+
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.cssText = 'position:absolute; left:-9999px; width:1100px; font-family: "Inter", sans-serif;';
+                pdfContainer.innerHTML = `<style>.pdf-container{color:#333}.pdf-header{font-size:22px;font-weight:700;text-align:center;margin-bottom:15px}.pdf-table{width:100%;border-collapse:collapse;font-size:10px}.pdf-table th,.pdf-table td{border:1px solid #ccc;padding:5px;word-wrap:break-word;text-align:left}.pdf-table th{background-color:#f2f2f2;font-weight:700}</style><div class="pdf-container"><div class="pdf-header">${title}</div>${tableToExport.outerHTML.replace('<table','<table class="pdf-table"')}</div>`;
+                document.body.appendChild(pdfContainer);
+
+                try {
+                    const canvas = await html2canvas(pdfContainer, { scale: 2 });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('l', 'mm', 'a4'); 
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    let heightLeft = pdfHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+                    
+                    while (heightLeft > 0) {
+                        position -= pageHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    for (let i = 1; i <= pdf.internal.getNumberOfPages(); i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(10);
+                        pdf.text(`報表日期 : ${new Date().toLocaleDateString('sv-SE')}`, 10, pdf.internal.pageSize.height - 10);
+                        pdf.text(`製表人 : ${data.preparers[0] || ''}`, pdf.internal.pageSize.width - 10, pdf.internal.pageSize.height - 10, { align: 'right' });
+                    }
+                    
+                    pdf.save(`${title}.pdf`);
+
+                } catch (error) {
+                    console.error("住戶名單 PDF 匯出失敗:", error);
+                    showSuccessMessage('匯出 PDF 失敗', true);
+                } finally {
+                    pdfContainer.remove();
+                }
+            }
+            
+            async function handleExportReportPDF() {
+                const previewElement = document.querySelector('.a4-preview');
+                const reportTitle = document.getElementById('report-preview-header').textContent.trim().replace(/_/g, ' ') || '財務報表';
+                const finalFilename = `${reportTitle}.pdf`;
+            
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const canvas = await html2canvas(previewElement, {
+                        scale: 3,
+                        useCORS: true,
+                        logging: false
+                    });
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgProps = pdf.getImageProperties(imgData);
+                    
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    
+                    // The preview element already has A4 aspect ratio, so we can just fit it to the page width with some margin.
+                    const margin = 10; // 10mm margin
+                    const pdfWidth = pageWidth - (margin * 2);
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+                    // Check if it fits the page height
+                    if (pdfHeight > (pageHeight - (margin * 2))) {
+                         console.warn("報表內容過長，可能無法完整顯示於一頁。");
+                    }
+            
+                    pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight);
+                    pdf.save(finalFilename);
+            
+                } catch (error) {
+                    console.error('PDF 匯出失敗:', error);
+                    showSuccessMessage('匯出 PDF 失敗，請查看主控台錯誤訊息。', true);
+                }
+            }
+            
+            function populateReportPreparers() {
+                 const selects = document.querySelectorAll('.report-preparer-select');
+                 selects.forEach(select => {
+                    select.innerHTML = '';
+                    data.preparers.forEach(p => {
+                        select.innerHTML += `<option value="${p}">${p}</option>`;
+                    });
+                 });
+            }
+
+            function generateStandardReportPreview(transactions) {
+                const incomeData = { fixed: {}, other: {} }; 
+                const expenseData = { fixed: {}, other: {} };
+
+                transactions.forEach(t => {
+                    const amount = t.amount;
+                    if (t.type === 'fixed_income') {
+                        incomeData.fixed[t.category] = (incomeData.fixed[t.category] || 0) + amount;
+                    } else if (t.type === 'other_income') {
+                        incomeData.other[t.category] = (incomeData.other[t.category] || 0) + amount;
+                    } else if (t.type === 'fixed_expense') {
+                        expenseData.fixed[t.category] = (expenseData.fixed[t.category] || 0) + Math.abs(amount);
+                    } else if (t.type === 'other_expense') {
+                        expenseData.other[t.category] = (expenseData.other[t.category] || 0) + Math.abs(amount);
+                    }
+                });
+
+                const fixedIncomeItems = Object.entries(incomeData.fixed).slice(0, 6);
+                const fixedExpenseItems = Object.entries(expenseData.fixed).slice(0, 6);
+                const otherIncomeItems = Object.entries(incomeData.other).slice(0, 6);
+                const otherExpenseItems = Object.entries(expenseData.other).slice(0, 6);
+
+                const fixedIncomeSubtotal = fixedIncomeItems.reduce((sum, item) => sum + item[1], 0);
+                const fixedExpenseSubtotal = fixedExpenseItems.reduce((sum, item) => sum + item[1], 0);
+                const otherIncomeSubtotal = otherIncomeItems.reduce((sum, item) => sum + item[1], 0);
+                const otherExpenseSubtotal = otherExpenseItems.reduce((sum, item) => sum + item[1], 0);
+
+                const totalIncome = fixedIncomeSubtotal + otherIncomeSubtotal;
+                const totalExpense = fixedExpenseSubtotal + otherExpenseSubtotal;
+                const grandTotal = totalIncome - totalExpense;
+
+                let tableHtml = '<table style="width:100%; border-collapse: collapse; font-size: 9pt; table-layout: fixed;">';
+                tableHtml += `
+                    <colgroup>
+                        <col style="width: 33.33%;">
+                        <col style="width: 16.67%;">
+                        <col style="width: 33.33%;">
+                        <col style="width: 16.67%;">
+                    </colgroup>
+                `;
+                tableHtml += '<tbody>';
+                for (let i = 1; i <= 20; i++) {
+                    tableHtml += '<tr style="border: 1px solid #000;">';
+                    switch (i) {
+                        case 1:
+                            tableHtml += `<td colspan="2" style="border: 1px solid #000; padding: 5px; background-color: #f2f2f2; text-align: center; font-weight: bold;">固定收入</td>`;
+                            tableHtml += `<td colspan="2" style="border: 1px solid #000; padding: 5px; background-color: #f2f2f2; text-align: center; font-weight: bold;">固定支出</td>`;
+                            break;
+                        case 2:
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">項目</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">金額</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">項目</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">金額</td>`;
+                            break;
+                        case 9:
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">小計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(fixedIncomeSubtotal)}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">小計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(fixedExpenseSubtotal)}</td>`;
+                            break;
+                        case 10:
+                            tableHtml += `<td colspan="2" style="border: 1px solid #000; padding: 5px; background-color: #f2f2f2; text-align: center; font-weight: bold;">其他收入</td>`;
+                            tableHtml += `<td colspan="2" style="border: 1px solid #000; padding: 5px; background-color: #f2f2f2; text-align: center; font-weight: bold;">其他支出</td>`;
+                            break;
+                        case 11:
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">項目</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">金額</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">項目</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">金額</td>`;
+                            break;
+                        case 18:
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">小計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(otherIncomeSubtotal)}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">小計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(otherExpenseSubtotal)}</td>`;
+                            break;
+                        case 19:
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">收入合計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(totalIncome)}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">支出合計</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${formatCurrency(totalExpense)}</td>`;
+                            break;
+                        case 20:
+                            tableHtml += `<td colspan="4" style="border: 1px solid #000; padding: 5px; text-align: right; background-color: yellow; font-weight: bold;">${formatCurrency(grandTotal)}</td>`;
+                            break;
+                        default:
+                            let aCol = '', bCol = '', cCol = '', dCol = '';
+                            if (i >= 3 && i <= 8) {
+                                const itemIndex = i - 3;
+                                if (fixedIncomeItems[itemIndex]) {
+                                    aCol = fixedIncomeItems[itemIndex][0];
+                                    bCol = formatCurrency(fixedIncomeItems[itemIndex][1]);
+                                }
+                                if (fixedExpenseItems[itemIndex]) {
+                                    cCol = fixedExpenseItems[itemIndex][0];
+                                    dCol = formatCurrency(fixedExpenseItems[itemIndex][1]);
+                                }
+                            } else if (i >= 12 && i <= 17) {
+                                const itemIndex = i - 12;
+                                if (otherIncomeItems[itemIndex]) {
+                                    aCol = otherIncomeItems[itemIndex][0];
+                                    bCol = formatCurrency(otherIncomeItems[itemIndex][1]);
+                                }
+                                if (otherExpenseItems[itemIndex]) {
+                                    cCol = otherExpenseItems[itemIndex][0];
+                                    dCol = formatCurrency(otherExpenseItems[itemIndex][1]);
+                                }
+                            }
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: left;">${aCol}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${bCol}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: left;">${cCol}</td>`;
+                            tableHtml += `<td style="border: 1px solid #000; padding: 5px; text-align: right;">${dCol}</td>`;
+                            break;
+                    }
+                    tableHtml += '</tr>';
+                }
+                tableHtml += '</tbody></table>';
+                return tableHtml;
+            }
+
+            function updateReportPreview() {
+                const activeTab = document.querySelector('#report-sub-tabs .sub-tab.active');
+                if (!activeTab) return;
+
+                const reportType = activeTab.dataset.tab;
+                const reportName = activeTab.dataset.name;
+                const headerEl = document.getElementById('report-preview-header');
+                const dateEl = document.getElementById('report-preview-date');
+                const preparerEl = document.getElementById('report-preview-preparer');
+                const previewBodyEl = document.getElementById('report-preview-body');
+                
+                const activeContent = document.getElementById(`${reportType}-content`);
+                const selectedPreparer = activeContent.querySelector('.report-preparer-select').value;
+                
+                let dateString = "";
+                let filteredTransactions = [];
+                const standardReports = ['daily-report', 'monthly-report', 'yearly-report', 'custom-report'];
+
+                if (standardReports.includes(reportType)) {
+                     if (reportType === 'daily-report') {
+                        const date = document.getElementById('daily-report-date').value || new Date().toISOString().split('T')[0];
+                        dateString = formatDate(date);
+                        filteredTransactions = data.dailyTransactions.filter(t => t.date === date);
+                    } else if (reportType === 'monthly-report') {
+                        const month = document.getElementById('monthly-report-month').value || new Date().toISOString().substring(0, 7);
+                        dateString = month;
+                        filteredTransactions = data.dailyTransactions.filter(t => t.date.startsWith(month));
+                    } else if (reportType === 'yearly-report') {
+                        const year = document.getElementById('yearly-report-year').value || new Date().getFullYear();
+                        dateString = year;
+                        filteredTransactions = data.dailyTransactions.filter(t => t.date.startsWith(year));
+                    } else if (reportType === 'custom-report') {
+                        const start = document.getElementById('custom-report-start').value;
+                        const end = document.getElementById('custom-report-end').value;
+                        dateString = `${formatDate(start)} 至 ${formatDate(end)}`;
+                        if (start && end) {
+                            filteredTransactions = data.dailyTransactions.filter(t => t.date >= start && t.date <= end);
+                        }
+                    }
+                } else if (reportType === 'financial-report') {
+                     dateString = document.getElementById(`${reportType}-month`).value || new Date().toISOString().substring(0, 7);
+                } else if (reportType === 'forecast-report') {
+                     dateString = document.getElementById(`${reportType}-year`).value || new Date().getFullYear();
+                } else if (reportType === 'reminder-report') {
+                     const selected = document.getElementById('reminder-resident-select');
+                     dateString = selected.options[selected.selectedIndex].text;
+                }
+
+                headerEl.textContent = `${data.customCommunityName}_${dateString}_${reportName}`;
+                dateEl.textContent = `報表日期 : ${formatDate(new Date().toISOString().split('T')[0])}`;
+                preparerEl.textContent = `製表人 : ${selectedPreparer}`;
+
+                if (standardReports.includes(reportType)) {
+                    previewBodyEl.innerHTML = generateStandardReportPreview(filteredTransactions);
+                    previewBodyEl.className = 'preview-body'; // Reset classes to remove centering and placeholder text styles
+                } else {
+                    // Handle other report types like financial, forecast, reminder
+                    previewBodyEl.innerHTML = '報表內容預覽'; // Keep the placeholder for others
+                    previewBodyEl.className = 'preview-body text-gray-400 text-center';
+                }
+            }
+
+            function renderReportPage() {
+                showPage('report');
+                const pageElement = document.getElementById('report-page');
+
+                if (!pageElement.dataset.listenersAttached) {
+                     const reminderSelect = document.getElementById('reminder-resident-select');
+                     reminderSelect.innerHTML = '<option value="">選擇戶號</option>';
+                     data.residents.forEach(r => {
+                         reminderSelect.innerHTML += `<option value="${r.householdNumber}">${r.householdNumber} (${r.name})</option>`;
+                     });
+                     
+                    const reportTabs = pageElement.querySelectorAll('#report-sub-tabs .sub-tab');
+                    const reportContents = pageElement.querySelectorAll('#report-contents .tab-content');
+
+                    reportTabs.forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            reportTabs.forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            reportContents.forEach(c => c.classList.remove('active'));
+                            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+                            updateReportPreview();
+                        });
+                    });
+                     
+                    pageElement.querySelectorAll('#report-contents input, #report-contents select').forEach(input => {
+                        input.addEventListener('change', updateReportPreview);
+                    });
+                     
+                    pageElement.querySelectorAll('.export-report-pdf-btn').forEach(btn => {
+                        btn.addEventListener('click', handleExportReportPDF);
+                    });
+
+                    pageElement.dataset.listenersAttached = 'true';
+                }
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('daily-report-date').value = today;
+                document.getElementById('custom-report-start').value = today;
+                document.getElementById('custom-report-end').value = today;
+                document.getElementById('monthly-report-month').value = today.substring(0, 7);
+                document.getElementById('financial-report-month').value = today.substring(0, 7);
+                document.getElementById('yearly-report-year').value = new Date().getFullYear();
+                document.getElementById('forecast-report-year').value = new Date().getFullYear();
+                
+                populateReportPreparers();
+                updateReportPreview();
+            }
+            
+             function renderOtherPage() {
+                showPage('other');
+            }
+
+            function renderSettingsPage() {
+                showPage('settings');
+                const pageElement = document.getElementById('settings-page');
+                
+                pageElement.querySelector('#community-name-input-page').value = data.customCommunityName;
+                pageElement.querySelector('#community-logo-url-input').value = data.communityLogoUrl;
+                pageElement.querySelector('#currency-unit-select').value = data.currencySymbol;
+                pageElement.querySelector('#date-format-select').value = data.dateFormat;
+
+                renderBankAccountsList(pageElement);
+                renderCategorySettings(pageElement);
+                renderPreparersList(pageElement);
+                renderSuppliersList();
+
+                if (!pageElement.dataset.listenersAttached) {
+                     const settingsTabs = pageElement.querySelectorAll('#settings-sub-tabs .sub-tab');
+                    const settingsContents = pageElement.querySelectorAll('#settings-contents .tab-content');
+
+                    settingsTabs.forEach(tab => {
+                        tab.addEventListener('click', () => {
+                            settingsTabs.forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            settingsContents.forEach(c => c.classList.remove('active'));
+                            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+                        });
+                    });
+                    
+                    pageElement.querySelector('#save-community-settings-btn').addEventListener('click', () => {
+                        data.customCommunityName = pageElement.querySelector('#community-name-input-page').value;
+                        data.communityLogoUrl = pageElement.querySelector('#community-logo-url-input').value;
+                        data.currencySymbol = pageElement.querySelector('#currency-unit-select').value;
+                        data.dateFormat = pageElement.querySelector('#date-format-select').value;
+                        saveData();
+                        renderCustomTitle();
+                        updateCommunityLogo();
+                        document.getElementById('login-community-name').textContent = data.customCommunityName;
+                        reRenderAllPages();
+                        showSuccessMessage(`社區設定已更新`);
+                    });
+                    
+                    pageElement.querySelector('#add-bank-account-btn-page').addEventListener('click', () => {
+                        const nameInput = pageElement.querySelector('#new-bank-account-name-input-page');
+                        const newAccountName = nameInput.value.trim();
+                        if (newAccountName && !data.bankAccounts.some(acc => acc.name === newAccountName)) {
+                            data.bankAccounts.push({ 
+                                name: newAccountName, type: 'current', 
+                                beginningBalance: parseFloat(pageElement.querySelector('#new-bank-account-balance-input-page').value) || 0,
+                                accountNumber: pageElement.querySelector('#new-bank-account-number-input-page').value.trim()
+                            });
+                            saveData();
+                            renderBankAccountsList(pageElement);
+                            nameInput.value = '';
+                            pageElement.querySelector('#new-bank-account-number-input-page').value = '';
+                            pageElement.querySelector('#new-bank-account-balance-input-page').value = '';
+                        }
+                    });
+
+                    pageElement.addEventListener('click', e => {
+                        const btn = e.target.closest('button');
+                        if (!btn) return;
+                        if (btn.classList.contains('edit-bank-btn')) {
+                            const index = parseInt(btn.dataset.index);
+                            const account = data.bankAccounts[index];
+                            const li = btn.closest('li');
+                            li.innerHTML = `
+                                <div class="flex-grow flex items-center gap-2"><input type="text" value="${account.name}" class="settings-input shadow border rounded py-1 px-2 w-24"></div>
+                                <div class="flex items-center gap-4">
+                                    <span>帳號: <input type="text" value="${account.accountNumber}" class="settings-input shadow border rounded py-1 px-2 w-24"></span>
+                                    <span>期初金額: <input type="number" value="${account.beginningBalance}" class="settings-input shadow border rounded py-1 px-2 w-24"></span>
+                                </div>
+                                <div class="flex gap-2 ml-4">
+                                    <button class="save-bank-btn text-green-500" data-index="${index}"><i class="fas fa-check"></i></button>
+                                    <button class="cancel-edit-bank-btn text-gray-500"><i class="fas fa-times"></i></button>
+                                </div>`;
+                        } else if (btn.classList.contains('save-bank-btn')) {
+                            const index = parseInt(btn.dataset.index);
+                            const inputs = btn.closest('li').querySelectorAll('input');
+                            data.bankAccounts[index].name = inputs[0].value;
+                            data.bankAccounts[index].accountNumber = inputs[1].value;
+                            data.bankAccounts[index].beginningBalance = parseFloat(inputs[2].value);
+                            saveData();
+                            renderBankAccountsList(pageElement);
+                            populateDailyMethodSelect();
+                            renderBankTabs();
+                        } else if (btn.classList.contains('cancel-edit-bank-btn')) {
+                            renderBankAccountsList(pageElement);
+                        } else if (btn.classList.contains('delete-bank-btn')) {
+                            const index = parseInt(btn.dataset.index);
+                            const account = data.bankAccounts[index];
+                            showConfirmModal(`確定要刪除 "${account.name}" 嗎？`, () => {
+                                data.bankAccounts.splice(index, 1);
+                                saveData();
+                                renderBankAccountsList(pageElement);
+                                renderBankTabs();
+                                populateDailyMethodSelect();
+                            });
+                        }
+                    });
+                    
+                    pageElement.dataset.listenersAttached = 'true';
+                }
+            }
+
+
+            function renderCategorySettings(pageElement) {
+                const container = pageElement.querySelector('#category-settings-container-page');
+                container.innerHTML = '<h3 class="text-xl font-semibold mb-4">交易類別設定</h3>';
+                
+                Object.keys(typeMap).forEach(typeKey => {
+                    const typeName = typeMap[typeKey];
+                    const categories = data.categories[typeKey] || [];
+                    
+                    const section = document.createElement('div');
+                    section.classList.add('mb-6');
+                    section.innerHTML = `<h4 class="text-lg font-bold mb-2 border-b">${typeName}</h4>`;
+                    
+                    const list = document.createElement('ul');
+                    list.classList.add('space-y-2', 'mb-2');
+                    categories.forEach((cat, index) => {
+                        const li = document.createElement('li');
+                        li.classList.add('flex', 'justify-between', 'items-center', 'bg-gray-50', 'p-2', 'rounded');
+                        li.innerHTML = `
+                            <span class="flex-grow">${cat}</span>
+                            <div class="flex items-center gap-2">
+                                <button data-type="${typeKey}" data-index="${index}" class="edit-cat-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                                <button data-type="${typeKey}" data-cat="${cat}" class="delete-cat-btn text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                            </div>`;
+                        list.appendChild(li);
+                    });
+                    
+                    const addForm = document.createElement('div');
+                    addForm.classList.add('flex', 'gap-2', 'mt-2');
+                    addForm.innerHTML = `
+                        <input type="text" placeholder="新增類別" class="new-cat-input shadow border rounded w-full py-1 px-2">
+                        <button data-type="${typeKey}" class="add-cat-btn bg-blue-500 text-white py-1 px-3 rounded">新增</button>
+                    `;
+                    
+                    section.appendChild(list);
+                    section.appendChild(addForm);
+                    container.appendChild(section);
+                });
+            }
+            
+            function renderPreparersList(pageElement) {
+                const listEl = pageElement.querySelector('#preparers-list');
+                listEl.innerHTML = '';
+                data.preparers.forEach((name, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between bg-gray-100 p-2 rounded-lg';
+                    li.innerHTML = `<span>${name}</span>
+                                    <button data-index="${index}" class="delete-preparer-btn text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>`;
+                    listEl.appendChild(li);
+                });
+
+                pageElement.querySelectorAll('.delete-preparer-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        showConfirmModal(`確定要刪除製表人 "${data.preparers[index]}" 嗎？`, () => {
+                            data.preparers.splice(index, 1);
+                            saveData();
+                            renderPreparersList(pageElement);
+                        });
+                    });
+                });
+                
+                pageElement.querySelector('#add-preparer-btn').onclick = () => {
+                    const input = pageElement.querySelector('#new-preparer-name-input');
+                    const newName = input.value.trim();
+                    if (newName && !data.preparers.includes(newName)) {
+                        data.preparers.push(newName);
+                        saveData();
+                        renderPreparersList(pageElement);
+                        input.value = '';
+                    }
+                };
+            }
+
+             function renderSuppliersList() {
+                const tbody = document.getElementById('suppliers-list');
+                tbody.innerHTML = '';
+                data.suppliers.forEach(s => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${s.id}</td>
+                            <td>${s.name}</td>
+                            <td>${s.contact}</td>
+                            <td>${s.phone}</td>
+                            <td>${s.address}</td>
+                            <td>${s.service}</td>
+                            <td>${typeMap[s.type]}</td>
+                            <td>${s.category}</td>
+                            <td>${s.note}</td>
+                            <td>
+                                <button data-id="${s.id}" class="edit-supplier-btn text-blue-500 mr-2"><i class="fas fa-edit"></i></button>
+                                <button data-id="${s.id}" class="delete-supplier-btn text-red-500"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>`;
+                });
+                document.querySelectorAll('.edit-supplier-btn').forEach(btn => btn.addEventListener('click', (e) => openSupplierModal(e.currentTarget.dataset.id)));
+                document.querySelectorAll('.delete-supplier-btn').forEach(btn => btn.addEventListener('click', handleDeleteSupplier));
+            }
+
+            function populateSupplierCategorySelect() {
+                const typeSelect = document.getElementById('supplier-type');
+                const categorySelect = document.getElementById('supplier-category');
+                const currentType = typeSelect.value;
+                categorySelect.innerHTML = '';
+                (data.categories[currentType] || []).forEach(cat => {
+                    categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+            }
+
+            function openSupplierModal(supplierId = null) {
+                const modal = document.getElementById('add-supplier-modal');
+                const form = document.getElementById('supplier-form');
+                const title = document.getElementById('supplier-modal-title');
+                form.reset();
+                document.getElementById('supplier-id').value = '';
+                document.getElementById('supplier-type').addEventListener('change', populateSupplierCategorySelect);
+
+                if (supplierId) {
+                    const supplier = data.suppliers.find(s => s.id === supplierId);
+                    if (supplier) {
+                        title.textContent = '編輯供應商';
+                        document.getElementById('supplier-id').value = supplier.id;
+                        document.getElementById('supplier-name').value = supplier.name;
+                        document.getElementById('supplier-contact').value = supplier.contact;
+                        document.getElementById('supplier-phone').value = supplier.phone;
+                        document.getElementById('supplier-address').value = supplier.address;
+                        document.getElementById('supplier-service').value = supplier.service;
+                        document.getElementById('supplier-type').value = supplier.type;
+                        populateSupplierCategorySelect();
+                        document.getElementById('supplier-category').value = supplier.category;
+                        document.getElementById('supplier-note').value = supplier.note;
+                    }
+                } else {
+                    title.textContent = '新增供應商';
+                    populateSupplierCategorySelect();
+                }
+                modal.style.display = 'flex';
+            }
+            
+            function handleSupplierFormSubmit(e) {
+                e.preventDefault();
+                const id = document.getElementById('supplier-id').value;
+                const supplierData = {
+                    name: document.getElementById('supplier-name').value,
+                    contact: document.getElementById('supplier-contact').value,
+                    phone: document.getElementById('supplier-phone').value,
+                    address: document.getElementById('supplier-address').value,
+                    service: document.getElementById('supplier-service').value,
+                    type: document.getElementById('supplier-type').value,
+                    category: document.getElementById('supplier-category').value,
+                    note: document.getElementById('supplier-note').value,
+                };
+
+                if (id) {
+                    const index = data.suppliers.findIndex(s => s.id === id);
+                    data.suppliers[index] = { ...data.suppliers[index], ...supplierData };
+                } else {
+                    supplierData.id = generateSupplierSerial();
+                    data.suppliers.push(supplierData);
+                }
+                saveData();
+                renderSuppliersList();
+                document.getElementById('add-supplier-modal').style.display = 'none';
+            }
+            
+            function handleDeleteSupplier(e) {
+                const supplierId = e.currentTarget.dataset.id;
+                showConfirmModal('確定要刪除這位供應商嗎？', () => {
+                    data.suppliers = data.suppliers.filter(s => s.id !== supplierId);
+                    saveData();
+                    renderSuppliersList();
+                });
+            }
+
+            function renderResidentControlSettings() {
+                const container = document.getElementById('resident-control-settings-container-page');
+                container.innerHTML = '<h3 class="text-xl font-semibold mb-4">住戶管制類別設定</h3>';
+
+                const settings = [
+                    { title: '人口管制戶', key: 'populationControlOptions' },
+                    { title: '秩序管制戶', key: 'orderControlOptions' }
+                ];
+
+                settings.forEach(setting => {
+                    const options = data[setting.key] || [];
+                    const section = document.createElement('div');
+                    section.classList.add('mb-6');
+                    section.innerHTML = `<h4 class="text-lg font-bold mb-2 border-b">${setting.title}</h4>`;
+
+                    const list = document.createElement('ul');
+                    list.classList.add('space-y-2', 'mb-2');
+                    options.forEach((opt, index) => {
+                        const li = document.createElement('li');
+                        li.classList.add('flex', 'justify-between', 'items-center', 'bg-gray-50', 'p-2', 'rounded');
+                        li.innerHTML = `
+                            <span class="flex-grow">${opt}</span>
+                            <div class="flex items-center gap-2">
+                                <button data-key="${setting.key}" data-index="${index}" class="edit-res-opt-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                                <button data-key="${setting.key}" data-opt="${opt}" class="delete-res-opt-btn text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                            </div>`;
+                        list.appendChild(li);
+                    });
+
+                    const addForm = document.createElement('div');
+                    addForm.classList.add('flex', 'gap-2', 'mt-2');
+                    addForm.innerHTML = `
+                        <input type="text" placeholder="新增類別" class="new-res-opt-input shadow border rounded w-full py-1 px-2">
+                        <button data-key="${setting.key}" class="add-res-opt-btn bg-blue-500 text-white py-1 px-3 rounded">新增</button>
+                    `;
+
+                    section.appendChild(list);
+                    section.appendChild(addForm);
+                    container.appendChild(section);
+                });
+            }
+
+            function renderBankAccountsList(pageElement) {
+                const list = pageElement.querySelector('#bank-accounts-list-page');
+                list.innerHTML = '';
+                const defaultNonDeletable = ['定存'];
+
+                data.bankAccounts.forEach((account, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('flex', 'items-center', 'justify-between', 'bg-gray-100', 'p-2', 'rounded-lg');
+                    const isFixed = account.type === 'fixed';
+                    const isDefaultNonDeletable = defaultNonDeletable.includes(account.name);
+                    li.innerHTML = `
+                        <div class="flex-grow flex items-center gap-2"><span class="font-semibold">${account.name}</span></div>
+                        <div class="flex items-center gap-4">
+                            ${!isFixed ? `<span>帳號: <span class="font-bold">${account.accountNumber}</span></span>
+                                          <span>期初金額: <span class="font-bold">${formatCurrency(account.beginningBalance)}</span></span>` : ''}
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                           ${!isFixed ? `<button class="edit-bank-btn text-blue-500 hover:text-blue-700" data-index="${index}"><i class="fas fa-edit"></i></button>` : ''}
+                           ${!isDefaultNonDeletable && !isFixed ? `<button class="delete-bank-btn text-red-500 hover:text-red-700" data-index="${index}"><i class="fas fa-trash-alt"></i></button>` : ''}
+                        </div>`;
+                    list.appendChild(li);
+                });
+            }
+            
+            function showSuccessMessage(message, isError = false) {
+                 const modal = document.createElement('div');
+                modal.className = 'custom-modal';
+                modal.innerHTML = `<div class="bg-white rounded-lg p-8 m-4 max-w-sm w-full shadow-lg">
+                        <h3 class="text-lg font-bold mb-4">${isError ? '錯誤' : '成功'}</h3><p>${message}</p>
+                        <div class="flex justify-end mt-4"><button onclick="this.closest('.custom-modal').remove()" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg">確定</button></div></div>`;
+                document.body.appendChild(modal);
+            }
+
+            function showConfirmModal(message, callback) {
+                const modal = document.getElementById('confirm-modal');
+                const confirmMessageEl = document.getElementById('confirm-message');
+                const confirmBtn = document.getElementById('confirm-btn');
+                const cancelBtn = document.getElementById('cancel-btn');
+                confirmMessageEl.textContent = message;
+                modal.classList.remove('hidden');
+                const handleConfirm = () => { callback(); close(); };
+                const handleCancel = () => close();
+                const close = () => {
+                    modal.classList.add('hidden');
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                }
+                confirmBtn.addEventListener('click', handleConfirm);
+                cancelBtn.addEventListener('click', handleCancel);
+            }
+
+            function initializeMainApp() {
+                navItems.forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        navItems.forEach(nav => nav.classList.remove('active'));
+                        const li = e.target.closest('li');
+                        li.classList.add('active');
+                        const page = li.dataset.page;
+                        const pageRenderers = {
+                            overview: renderOverviewPage,
+                            daily: renderDailyPage,
+                            bank: renderBankPage,
+                            residents: renderResidentListPage,
+                            report: renderReportPage,
+                            other: renderOtherPage,
+                            settings: renderSettingsPage
+                        };
+                        if(pageRenderers[page]) pageRenderers[page]();
+                    });
+                });
+
+                document.getElementById('daily-date').addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        document.getElementById('daily-month').value = e.target.value.substring(0, 7);
+                    }
+                });
+
+                document.getElementById('toggle-calendar-btn').addEventListener('click', () => {
+                    data.dateFormat = data.dateFormat === 'roc' ? 'gregorian' : 'roc';
+                    saveData();
+                    document.getElementById('toggle-calendar-btn').textContent = data.dateFormat === 'roc' ? '切換西元' : '切換民國';
+                    updateClock();
+                });
+                document.getElementById('toggle-time-format-btn').addEventListener('click', () => {
+                    data.is12Hour = !data.is12Hour;
+                    saveData();
+                    document.getElementById('toggle-time-format-btn').textContent = data.is12Hour ? '切換24小時' : '切換12小時';
+                    updateClock();
+                });
+                
+                document.getElementById('daily-form').addEventListener('submit', handleDailyFormSubmit);
+                document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('add-transaction-modal').style.display = 'none');
+                document.getElementById('daily-type').addEventListener('change', populateCategorySelect);
+
+                document.getElementById('add-supplier-btn').addEventListener('click', () => openSupplierModal());
+                document.getElementById('close-supplier-modal-btn').addEventListener('click', () => document.getElementById('add-supplier-modal').style.display = 'none');
+                document.getElementById('supplier-form').addEventListener('submit', handleSupplierFormSubmit);
+
+
+                window.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+                });
+
+                document.getElementById('toggle-calendar-btn').textContent = data.dateFormat === 'roc' ? '切換西元' : '切換民國';
+                document.getElementById('toggle-time-format-btn').textContent = data.is12Hour ? '切換24小時' : '切換12小時';
+
+                renderCustomTitle();
+                renderOverviewPage();
+            }
+
+            function setupLoginPage() {
+                loadData();
+                document.getElementById('login-community-name').textContent = data.customCommunityName;
+                updateCommunityLogo();
+                
+                const loginPage = document.getElementById('login-page');
+                const mainApp = document.getElementById('main-app');
+                const loginBtn = document.getElementById('login-btn');
+                const passwordInput = document.getElementById('password-input');
+                const loginError = document.getElementById('login-error');
+                const togglePassword = document.getElementById('toggle-password');
+
+                function attemptLogin() {
+                    if (passwordInput.value === '00001') {
+                        loginPage.style.display = 'none';
+                        const body = document.body;
+                        body.style.padding = '2rem';
+                        body.style.display = 'flex';
+                        body.style.alignItems = 'center';
+                        body.style.justifyContent = 'center';
+                        
+                        mainApp.style.display = 'flex';
+                        initializeMainApp(); 
+                    } else {
+                        loginError.textContent = '密碼錯誤，請重試。';
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                }
+
+                loginBtn.addEventListener('click', attemptLogin);
+                passwordInput.addEventListener('keyup', (event) => {
+                    loginError.textContent = '';
+                    if (event.key === 'Enter') {
+                        attemptLogin();
+                    }
+                });
+
+                togglePassword.addEventListener('click', function () {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+
+            setupLoginPage();
+        })();
+    </script>
+</body>
+</html>
