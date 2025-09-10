@@ -16,12 +16,15 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 2rem;
             box-sizing: border-box;
             background-color: #f3f4f6;
             color: #374151;
             height: 100vh;
             font-size: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .app-container {
             width: 1440px;
@@ -370,21 +373,7 @@
     </style>
 </head>
 <body>
-    <div id="login-page" class="fixed inset-0 w-full h-full bg-red-600 flex items-center justify-center z-50">
-        <div class="bg-white bg-opacity-90 p-6 rounded-lg shadow-xl flex flex-col items-center justify-center space-y-3 w-[480px] h-[300px]">
-            <img id="login-logo" src="https://static.wixstatic.com/media/6148f9_56377cef73c1498f95a2c3057b89f2ed~mv2.png" alt="社區標誌" style="width: 120px; height: 60px;">
-            <h1 id="login-community-name" class="text-xl font-bold text-red-600"></h1>
-            <h2 class="text-xl font-bold text-black">財務系統</h2>
-            <div class="relative w-full">
-                <input type="password" id="password-input" class="shadow border rounded-lg w-full py-2 px-3 text-center" placeholder="請輸入密碼">
-                <i id="toggle-password" class="fas fa-eye absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500"></i>
-            </div>
-            <p id="login-error" class="text-red-500 text-sm h-4"></p>
-            <button id="login-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">確認</button>
-        </div>
-    </div>
-
-    <div id="main-app" class="app-container" style="display: none;">
+    <div id="main-app" class="app-container">
         <aside class="sidebar">
             <img id="sidebar-logo" src="https://static.wixstatic.com/media/6148f9_56377cef73c1498f95a2c3057b89f2ed~mv2.png" alt="社區標誌" class="logo-image">
             <div class="title-wrapper">
@@ -839,7 +828,8 @@
                     <div class="sub-tab" data-tab="preparer-settings">製表人</div>
                     <div class="sub-tab" data-tab="category-settings">交易類別</div>
                     <div class="sub-tab" data-tab="bank-settings">銀行設定</div>
-                    <div class="sub-tab" data-tab="supplier-settings">供應商</div>
+                    <div class="sub-tab" data-tab="supplier-settings">廠商</div>
+                    <div class="sub-tab" data-tab="backup-settings">系統紀錄</div>
                 </div>
                  <div id="settings-contents">
                     <div id="community-name-settings-content" class="tab-content active">
@@ -907,7 +897,7 @@
                         <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
                             <div class="flex justify-end mb-4">
                                 <button id="add-supplier-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                                    <i class="fas fa-plus mr-2"></i>新增供應商
+                                    <i class="fas fa-plus mr-2"></i>新增廠商
                                 </button>
                             </div>
                             <div class="overflow-x-auto">
@@ -915,7 +905,7 @@
                                     <thead>
                                         <tr>
                                             <th>編號</th>
-                                            <th>供應商名稱</th>
+                                            <th>廠商名稱</th>
                                             <th>聯絡人</th>
                                             <th>電話</th>
                                             <th>地址</th>
@@ -928,6 +918,28 @@
                                     </thead>
                                     <tbody id="suppliers-list"></tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="backup-settings-content" class="tab-content">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+                            <div class="flex justify-end mb-4">
+                                <button id="save-backup-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    <i class="fas fa-download mr-2"></i>儲存所有資料備份
+                                </button>
+                            </div>
+                            <h4 class="text-lg font-bold mb-2 border-b">備份紀錄</h4>
+                            <div class="overflow-x-auto">
+                                <table class="transaction-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>備份時間</th>
+                                            <th>檔案名稱</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="backup-history-list"></tbody>
+                                </table>
+                                 <p id="no-backups-message" class="text-center text-gray-500 mt-4 hidden">尚無備份紀錄。</p>
                             </div>
                         </div>
                     </div>
@@ -995,12 +1007,12 @@
     <div id="add-supplier-modal" class="modal">
         <div class="modal-content">
              <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 id="supplier-modal-title" class="text-2xl font-bold">新增供應商</h3>
+                <h3 id="supplier-modal-title" class="text-2xl font-bold">新增廠商</h3>
                 <button id="close-supplier-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
             <form id="supplier-form" class="space-y-4">
                 <input type="hidden" id="supplier-id">
-                <div><label for="supplier-name" class="block text-sm font-bold">供應商名稱</label><input type="text" id="supplier-name" class="shadow border rounded w-full py-2 px-3" required></div>
+                <div><label for="supplier-name" class="block text-sm font-bold">廠商名稱</label><input type="text" id="supplier-name" class="shadow border rounded w-full py-2 px-3" required></div>
                 <div><label for="supplier-contact" class="block text-sm font-bold">聯絡人</label><input type="text" id="supplier-contact" class="shadow border rounded w-full py-2 px-3"></div>
                 <div><label for="supplier-phone" class="block text-sm font-bold">電話</label><input type="text" id="supplier-phone" class="shadow border rounded w-full py-2 px-3"></div>
                 <div><label for="supplier-address" class="block text-sm font-bold">地址</label><input type="text" id="supplier-address" class="shadow border rounded w-full py-2 px-3"></div>
@@ -1162,7 +1174,8 @@
                     'other_expense': ['設備維修', '行政支出']
                 },
                 populationControlOptions: ['一般戶','空屋戶', '承租戶', '銀髮族', '獨居戶'],
-                orderControlOptions: ['一般戶','寵物戶', '噪音戶', '臭氣戶', '違規戶']
+                orderControlOptions: ['一般戶','寵物戶', '噪音戶', '臭氣戶', '違規戶'],
+                backupHistory: []
             };
 
             let dailySerialCounter = 0;
@@ -1228,6 +1241,7 @@
                 });
                 if (!Array.isArray(data.todos)) data.todos = [];
                 if (!Array.isArray(data.preparers) || data.preparers.length === 0) data.preparers = ['管理員'];
+                if (!Array.isArray(data.backupHistory)) data.backupHistory = [];
             }
             
             function showPage(pageName) {
@@ -1237,7 +1251,6 @@
             }
 
             function updateCommunityLogo() {
-                document.getElementById('login-logo').src = data.communityLogoUrl;
                 document.getElementById('sidebar-logo').src = data.communityLogoUrl;
             }
 
@@ -2351,6 +2364,7 @@
                 renderCategorySettings(pageElement);
                 renderPreparersList(pageElement);
                 renderSuppliersList();
+                renderBackupHistory();
 
                 if (!pageElement.dataset.listenersAttached) {
                      const settingsTabs = pageElement.querySelectorAll('#settings-sub-tabs .sub-tab');
@@ -2373,7 +2387,9 @@
                         saveData();
                         renderCustomTitle();
                         updateCommunityLogo();
-                        document.getElementById('login-community-name').textContent = data.customCommunityName;
+                        if (document.getElementById('login-community-name')) {
+                           document.getElementById('login-community-name').textContent = data.customCommunityName;
+                        }
                         reRenderAllPages();
                         showSuccessMessage(`社區設定已更新`);
                     });
@@ -2437,6 +2453,7 @@
                         }
                     });
                     
+                    document.getElementById('save-backup-btn').addEventListener('click', handleSaveBackup);
                     pageElement.dataset.listenersAttached = 'true';
                 }
             }
@@ -2561,7 +2578,7 @@
                 if (supplierId) {
                     const supplier = data.suppliers.find(s => s.id === supplierId);
                     if (supplier) {
-                        title.textContent = '編輯供應商';
+                        title.textContent = '編輯廠商';
                         document.getElementById('supplier-id').value = supplier.id;
                         document.getElementById('supplier-name').value = supplier.name;
                         document.getElementById('supplier-contact').value = supplier.contact;
@@ -2574,7 +2591,7 @@
                         document.getElementById('supplier-note').value = supplier.note;
                     }
                 } else {
-                    title.textContent = '新增供應商';
+                    title.textContent = '新增廠商';
                     populateSupplierCategorySelect();
                 }
                 modal.style.display = 'flex';
@@ -2608,11 +2625,68 @@
             
             function handleDeleteSupplier(e) {
                 const supplierId = e.currentTarget.dataset.id;
-                showConfirmModal('確定要刪除這位供應商嗎？', () => {
+                showConfirmModal('確定要刪除這家廠商嗎？', () => {
                     data.suppliers = data.suppliers.filter(s => s.id !== supplierId);
                     saveData();
                     renderSuppliersList();
                 });
+            }
+
+            function renderBackupHistory() {
+                const tbody = document.getElementById('backup-history-list');
+                const noBackupsMessage = document.getElementById('no-backups-message');
+                tbody.innerHTML = '';
+
+                if (data.backupHistory.length === 0) {
+                    noBackupsMessage.classList.remove('hidden');
+                    return;
+                }
+
+                noBackupsMessage.classList.add('hidden');
+                // Show latest first
+                [...data.backupHistory].reverse().forEach(record => {
+                    const date = new Date(record.timestamp);
+                    const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${record.fileName}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            function handleSaveBackup() {
+                try {
+                    const fullDataString = JSON.stringify(data, null, 2); // Pretty print JSON
+                    const blob = new Blob([fullDataString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    const now = new Date();
+                    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+                    const fileName = `${data.customCommunityName}_備份_${timestamp}.json`;
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    // Add to history
+                    data.backupHistory.push({
+                        timestamp: Date.now(),
+                        fileName: fileName
+                    });
+                    saveData();
+                    renderBackupHistory();
+                    showSuccessMessage('資料已成功備份下載！');
+
+                } catch (error) {
+                    console.error("備份失敗:", error);
+                    showSuccessMessage('資料備份失敗，請查看主控台錯誤訊息。', true);
+                }
             }
 
             function renderResidentControlSettings() {
@@ -2767,53 +2841,8 @@
                 renderOverviewPage();
             }
 
-            function setupLoginPage() {
-                loadData();
-                document.getElementById('login-community-name').textContent = data.customCommunityName;
-                updateCommunityLogo();
-                
-                const loginPage = document.getElementById('login-page');
-                const mainApp = document.getElementById('main-app');
-                const loginBtn = document.getElementById('login-btn');
-                const passwordInput = document.getElementById('password-input');
-                const loginError = document.getElementById('login-error');
-                const togglePassword = document.getElementById('toggle-password');
-
-                function attemptLogin() {
-                    if (passwordInput.value === '00001') {
-                        loginPage.style.display = 'none';
-                        const body = document.body;
-                        body.style.padding = '2rem';
-                        body.style.display = 'flex';
-                        body.style.alignItems = 'center';
-                        body.style.justifyContent = 'center';
-                        
-                        mainApp.style.display = 'flex';
-                        initializeMainApp(); 
-                    } else {
-                        loginError.textContent = '密碼錯誤，請重試。';
-                        passwordInput.value = '';
-                        passwordInput.focus();
-                    }
-                }
-
-                loginBtn.addEventListener('click', attemptLogin);
-                passwordInput.addEventListener('keyup', (event) => {
-                    loginError.textContent = '';
-                    if (event.key === 'Enter') {
-                        attemptLogin();
-                    }
-                });
-
-                togglePassword.addEventListener('click', function () {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    this.classList.toggle('fa-eye');
-                    this.classList.toggle('fa-eye-slash');
-                });
-            }
-
-            setupLoginPage();
+            loadData();
+            initializeMainApp();
         })();
     </script>
 </body>
