@@ -318,6 +318,13 @@
         .signature-table tr:last-child td {
             height: 2.7cm;
         }
+        .custom-info-table td {
+            border: 1px solid #000;
+            text-align: left;
+            padding: 0.25rem;
+            vertical-align: middle;
+            font-size: 10pt;
+        }
         /* Responsive styles for smaller screens */
         @media (max-width: 720px) {
             body {
@@ -515,11 +522,7 @@
                 <div class="page-header"><h3>每日收支</h3></div>
                 <div class="sub-tabs" id="daily-page-sub-tabs">
                      <div class="sub-tab active" data-tab="transactions-daily">收支明細</div>
-                    <div class="sub-tab" data-tab="prepaid-daily">預收款項</div>
-                    <div class="sub-tab" data-tab="receivable-daily">應收帳款</div>
-                    <div class="sub-tab" data-tab="payable-daily">應付帳款</div>
                     <div class="sub-tab" data-tab="agency-daily">代收代付</div>
-                    <div class="sub-tab" data-tab="todo-daily">代辦事項</div>
                 </div>
                 <div id="daily-page-tab-contents">
                     <div id="transactions-daily-tab-content" class="tab-content active">
@@ -607,11 +610,7 @@
                         </div>
                     </div>
                      <!-- Cloned Content Starts Here -->
-                    <div id="prepaid-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
-                    <div id="receivable-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
-                    <div id="payable-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
                     <div id="agency-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
-                    <div id="todo-daily-tab-content" class="tab-content"><div class="bg-white rounded-xl shadow-lg p-6">...</div></div>
                      <!-- Cloned Content Ends Here -->
                 </div>
             </div>
@@ -788,6 +787,34 @@
                     <div class="a4-preview">
                         <div id="report-preview-header" class="preview-header"></div>
                         <div id="report-preview-body" class="preview-body"></div>
+                        <div id="custom-info-table-container" style="margin-bottom: 0.8cm; display: none;">
+                            <table class="custom-info-table" style="width: 100%; border-collapse: collapse;">
+                                <colgroup>
+                                    <col style="width: 33.33%;">
+                                    <col style="width: 16.67%;">
+                                    <col style="width: 33.33%;">
+                                    <col style="width: 16.67%;">
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <td id="custom-A1"></td>
+                                        <td id="custom-B1"></td>
+                                        <td id="custom-C1"></td>
+                                        <td id="custom-D1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td id="custom-A2"></td>
+                                        <td id="custom-B2"></td>
+                                        <td id="custom-C2" rowspan="2"></td>
+                                        <td id="custom-D2" rowspan="2"></td>
+                                    </tr>
+                                     <tr>
+                                        <td id="custom-A3"></td>
+                                        <td id="custom-B3"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="signature-container">
                             <table class="signature-table">
                                 <tbody>
@@ -817,8 +844,66 @@
             </div>
              <div id="other-page" class="page">
                 <div class="page-header"><h3>其他功能</h3></div>
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <p class="text-gray-500 text-center text-2xl">建置中</p>
+                <div class="sub-tabs" id="other-sub-tabs">
+                    <div class="sub-tab active" data-tab="todo-list">代辦事項</div>
+                </div>
+                <div id="other-contents">
+                    <div id="todo-list-content" class="tab-content active">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <div class="flex justify-end mb-4">
+                                <button id="add-todo-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    <i class="fas fa-plus mr-2"></i>新增代辦事項
+                                </button>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xl font-semibold text-gray-800">進行中</h4>
+                                    <button id="export-pending-todos-pdf-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg text-sm">
+                                        <i class="fas fa-file-pdf mr-1"></i>匯出PDF
+                                    </button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="transaction-table w-full">
+                                        <thead>
+                                            <tr>
+                                                <th>日期時間</th>
+                                                <th>事由</th>
+                                                <th>交辦人</th>
+                                                <th>執行人</th>
+                                                <th>預計完成日時分</th>
+                                                <th>操作</th>
+                                                <th>狀態</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pending-todos-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="mt-8">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xl font-semibold text-gray-800">已完成</h4>
+                                    <button id="export-completed-todos-pdf-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg text-sm">
+                                        <i class="fas fa-file-pdf mr-1"></i>匯出PDF
+                                    </button>
+                                </div>
+                                 <div class="overflow-x-auto">
+                                    <table class="transaction-table w-full">
+                                        <thead>
+                                            <tr>
+                                                <th>建立日期</th>
+                                                <th>完成日期</th>
+                                                <th>事由</th>
+                                                <th>交辦人</th>
+                                                <th>執行人</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="completed-todos-list"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="settings-page" class="page">
@@ -829,7 +914,7 @@
                     <div class="sub-tab" data-tab="category-settings">交易類別</div>
                     <div class="sub-tab" data-tab="bank-settings">銀行設定</div>
                     <div class="sub-tab" data-tab="supplier-settings">廠商</div>
-                    <div class="sub-tab" data-tab="backup-settings">系統紀錄</div>
+                    <div class="sub-tab" data-tab="log-settings">系統紀錄</div>
                 </div>
                  <div id="settings-contents">
                     <div id="community-name-settings-content" class="tab-content active">
@@ -921,25 +1006,25 @@
                             </div>
                         </div>
                     </div>
-                    <div id="backup-settings-content" class="tab-content">
+                    <div id="log-settings-content" class="tab-content">
                         <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
-                            <div class="flex justify-end mb-4">
-                                <button id="save-backup-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
-                                    <i class="fas fa-download mr-2"></i>儲存所有資料備份
-                                </button>
-                            </div>
-                            <h4 class="text-lg font-bold mb-2 border-b">備份紀錄</h4>
+                            <button id="backup-data-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline">
+                                <i class="fas fa-download mr-2"></i>備份目前系統資料
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+                            <h3 class="text-xl font-semibold mb-4">備份紀錄</h3>
                             <div class="overflow-x-auto">
                                 <table class="transaction-table w-full">
                                     <thead>
                                         <tr>
-                                            <th>備份時間</th>
+                                            <th>日期時間</th>
                                             <th>檔案名稱</th>
+                                            <th>操作</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="backup-history-list"></tbody>
+                                    <tbody id="backup-list"></tbody>
                                 </table>
-                                 <p id="no-backups-message" class="text-center text-gray-500 mt-4 hidden">尚無備份紀錄。</p>
                             </div>
                         </div>
                     </div>
@@ -972,6 +1057,10 @@
                         <option value="other_income">其他收入</option>
                         <option value="fixed_expense">固定支出</option>
                         <option value="other_expense">其他支出</option>
+                        <option value="prepaid_income">預收款項</option>
+                        <option value="prepaid_expense">預付款項</option>
+                        <option value="accounts_receivable">應收款項</option>
+                        <option value="accounts_payable">應付款項</option>
                     </select>
                 </div>
                 <div>
@@ -1003,6 +1092,63 @@
         </div>
     </div>
 
+    <!-- Add/Edit Todo Modal -->
+    <div id="add-todo-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 id="todo-modal-title" class="text-2xl font-bold">新增代辦事項</h3>
+                <button id="close-todo-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <form id="todo-form" class="space-y-4">
+                <input type="hidden" id="todo-id">
+                <div>
+                    <label for="todo-datetime" class="block text-sm font-bold">日期時間</label>
+                    <input type="datetime-local" id="todo-datetime" class="shadow border rounded w-full py-2 px-3" required>
+                </div>
+                <div>
+                    <label for="todo-subject" class="block text-sm font-bold">事由</label>
+                    <input type="text" id="todo-subject" class="shadow border rounded w-full py-2 px-3" required>
+                </div>
+                <div>
+                    <label for="todo-assigner" class="block text-sm font-bold">交辦人 (戶號)</label>
+                    <input type="text" id="todo-assigner" list="resident-household-datalist" class="shadow border rounded w-full py-2 px-3">
+                    <datalist id="resident-household-datalist"></datalist>
+                </div>
+                <div>
+                    <label for="todo-assignee" class="block text-sm font-bold">執行人</label>
+                    <input type="text" id="todo-assignee" class="shadow border rounded w-full py-2 px-3">
+                </div>
+                <div>
+                    <label for="todo-expected-datetime" class="block text-sm font-bold">預計完成日時分</label>
+                    <input type="datetime-local" id="todo-expected-datetime" class="shadow border rounded w-full py-2 px-3">
+                </div>
+                <div>
+                    <label for="todo-notes" class="block text-sm font-bold">備註</label>
+                    <textarea id="todo-notes" rows="3" class="shadow border rounded w-full py-2 px-3"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">儲存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complete Todo Modal -->
+    <div id="complete-todo-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-2xl font-bold">完成代辦事項</h3>
+                <button id="close-complete-todo-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <form id="complete-todo-form" class="space-y-4">
+                <input type="hidden" id="complete-todo-id">
+                <div>
+                    <label for="completion-datetime" class="block text-sm font-bold">實際完成日期時間</label>
+                    <input type="datetime-local" id="completion-datetime" class="shadow border rounded w-full py-2 px-3" required>
+                </div>
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">確認完成</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Add/Edit Supplier Modal -->
     <div id="add-supplier-modal" class="modal">
         <div class="modal-content">
@@ -1022,6 +1168,8 @@
                     <select id="supplier-type" class="shadow border rounded w-full py-2 px-3">
                         <option value="fixed_expense">固定支出</option>
                         <option value="other_expense">其他支出</option>
+                        <option value="prepaid_expense">預付款項</option>
+                        <option value="accounts_payable">應付款項</option>
                     </select>
                 </div>
                 <div>
@@ -1148,6 +1296,10 @@
                 'other_income': '其他收入',
                 'fixed_expense': '固定支出',
                 'other_expense': '其他支出',
+                'prepaid_income': '預收款項',
+                'prepaid_expense': '預付款項',
+                'accounts_receivable': '應收款項',
+                'accounts_payable': '應付款項',
             };
             
             let data = {
@@ -1171,11 +1323,14 @@
                     'fixed_income': ['管理費', '停車費'],
                     'other_income': ['社區活動收入', '雜項收入'],
                     'fixed_expense': ['保全薪資', '清潔費', '機電保養'],
-                    'other_expense': ['設備維修', '行政支出']
+                    'other_expense': ['設備維修', '行政支出'],
+                    'prepaid_income': ['管理費', '停車費'],
+                    'prepaid_expense': ['廠商貨款'],
+                    'accounts_receivable': ['管理費', '停車費'],
+                    'accounts_payable': ['廠商貨款']
                 },
                 populationControlOptions: ['一般戶','空屋戶', '承租戶', '銀髮族', '獨居戶'],
-                orderControlOptions: ['一般戶','寵物戶', '噪音戶', '臭氣戶', '違規戶'],
-                backupHistory: []
+                orderControlOptions: ['一般戶','寵物戶', '噪音戶', '臭氣戶', '違規戶']
             };
 
             let dailySerialCounter = 0;
@@ -1241,7 +1396,6 @@
                 });
                 if (!Array.isArray(data.todos)) data.todos = [];
                 if (!Array.isArray(data.preparers) || data.preparers.length === 0) data.preparers = ['管理員'];
-                if (!Array.isArray(data.backupHistory)) data.backupHistory = [];
             }
             
             function showPage(pageName) {
@@ -1251,6 +1405,7 @@
             }
 
             function updateCommunityLogo() {
+                document.getElementById('login-logo').src = data.communityLogoUrl;
                 document.getElementById('sidebar-logo').src = data.communityLogoUrl;
             }
 
@@ -1336,14 +1491,14 @@
                 const listEl = document.getElementById(listElementId);
                 if (!listEl) return;
                 listEl.innerHTML = '';
-                const todosToRender = data.todos.filter(t => !t.done);
+                const todosToRender = (data.todos || []).filter(t => !t.done);
                 if (todosToRender.length === 0) {
                     listEl.innerHTML = `<li class="text-gray-400">沒有待辦事項</li>`;
                 } else {
                     todosToRender.forEach(todo => {
                         const li = document.createElement('li');
                         li.className = 'flex justify-between items-center bg-gray-50 p-2 rounded-md';
-                        li.innerHTML = `<span>${todo.text}</span>`;
+                        li.innerHTML = `<span>${todo.subject}</span>`;
                         listEl.appendChild(li);
                     });
                 }
@@ -1374,18 +1529,63 @@
                 renderDailyTransactions();
             }
             
+            function attachListenersToTabContent(contentElement) {
+                // Use optional chaining (?.) to avoid errors on elements that don't exist in the simplified view.
+                contentElement.querySelector('#import-csv-btn')?.addEventListener('click', () => contentElement.querySelector('#import-csv-input').click());
+                contentElement.querySelector('#import-csv-input')?.addEventListener('change', handleImportDailyCSV);
+                contentElement.querySelector('#export-csv-btn')?.addEventListener('click', () => exportData('csv'));
+                contentElement.querySelector('#export-pdf-btn')?.addEventListener('click', () => exportData('pdf'));
+                contentElement.querySelectorAll('input[name="period-filter"]').forEach(radio => radio.addEventListener('change', handlePeriodFilterChange));
+                ['date-filter-input', 'month-filter-input', 'year-filter-input', 'sort-direction-select'].forEach(id => {
+                    const el = contentElement.querySelector(`#${id}`);
+                    if(el) el.addEventListener('change', renderDailyTransactions);
+                });
+                contentElement.querySelector('#add-transaction-btn')?.addEventListener('click', openAddTransactionModal);
+                contentElement.querySelector('#delete-selected-btn')?.addEventListener('click', handleDeleteSelectedTransactions);
+                contentElement.querySelector('#select-all-transactions-checkbox')?.addEventListener('change', (e) => {
+                    contentElement.querySelectorAll('.transaction-checkbox').forEach(checkbox => {
+                        checkbox.checked = e.target.checked;
+                    });
+                });
+            }
+
             function setupDailyPageTabs() {
                 const pageElement = document.getElementById('daily-page');
                 const dailyTabs = pageElement.querySelectorAll('#daily-page-sub-tabs .sub-tab');
                 const dailyContents = pageElement.querySelectorAll('#daily-page-tab-contents .tab-content');
-                const transactionsContent = document.getElementById('transactions-daily-tab-content').innerHTML;
+                
+                const originalContentEl = document.getElementById('transactions-daily-tab-content');
+                const fullContentHTML = originalContentEl.innerHTML;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = fullContentHTML;
+                tempDiv.querySelector('#daily-summary').remove();
+                const buttonsContainer = tempDiv.querySelector('#export-import-buttons');
+                buttonsContainer.innerHTML = `
+                    <button id="delete-selected-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                        <i class="fas fa-trash-alt mr-2"></i>刪除選取
+                    </button>
+                    <button id="export-pdf-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline flex-grow">
+                        <i class="fas fa-file-pdf mr-2"></i>匯出 PDF
+                    </button>
+                `;
+                const simplifiedContentHTML = tempDiv.innerHTML;
+                
+                attachListenersToTabContent(originalContentEl);
 
                 dailyTabs.forEach(tab => {
-                    const contentId = tab.dataset.tab + '-tab-content';
+                    const tabType = tab.dataset.tab;
+                    const contentId = tabType + '-tab-content';
                     const contentEl = document.getElementById(contentId);
                     
-                    if (tab.dataset.tab !== 'transactions-daily') {
-                         contentEl.innerHTML = transactionsContent;
+                    if (tabType !== 'transactions-daily') {
+                         contentEl.innerHTML = fullContentHTML;
+                         attachListenersToTabContent(contentEl);
+                    }
+                    
+                    if (tabType !== 'transactions-daily') {
+                         contentEl.innerHTML = fullContentHTML;
+                         attachListenersToTabContent(contentEl);
                     }
                     
                     tab.addEventListener('click', () => {
@@ -1393,9 +1593,7 @@
                         tab.classList.add('active');
                         dailyContents.forEach(c => c.classList.remove('active'));
                         contentEl.classList.add('active');
-                         if (tab.dataset.tab === 'transactions-daily') {
-                            renderDailyTransactions();
-                         }
+                        renderDailyTransactions();
                     });
                 });
             }
@@ -1407,27 +1605,6 @@
                 
                 if (!pageElement.dataset.listenersAttached) {
                     setupDailyPageTabs();
-                    
-                    // Attach listeners to the original content, they will be cloned
-                    const originalContent = document.getElementById('transactions-daily-tab-content');
-
-                    originalContent.querySelector('#import-csv-btn').addEventListener('click', () => document.getElementById('import-csv-input').click());
-                    originalContent.querySelector('#import-csv-input').addEventListener('change', handleImportDailyCSV);
-                    originalContent.querySelector('#export-csv-btn').addEventListener('click', () => exportData('csv'));
-                    originalContent.querySelector('#export-pdf-btn').addEventListener('click', () => exportData('pdf'));
-                    originalContent.querySelectorAll('input[name="period-filter"]').forEach(radio => radio.addEventListener('change', handlePeriodFilterChange));
-                    ['date-filter-input', 'month-filter-input', 'year-filter-input', 'sort-direction-select'].forEach(id => {
-                        originalContent.querySelector(`#${id}`).addEventListener('change', renderDailyTransactions);
-                    });
-                    originalContent.querySelector('#add-transaction-btn').addEventListener('click', openAddTransactionModal);
-                    
-                    originalContent.querySelector('#delete-selected-btn').addEventListener('click', handleDeleteSelectedTransactions);
-                    originalContent.querySelector('#select-all-transactions-checkbox').addEventListener('change', (e) => {
-                        document.querySelectorAll('.transaction-checkbox').forEach(checkbox => {
-                            checkbox.checked = e.target.checked;
-                        });
-                    });
-
                     pageElement.dataset.listenersAttached = 'true';
                 }
                 
@@ -1474,14 +1651,32 @@
                 });
             }
             
+            function handleTransactionTypeChange() {
+                const typeSelect = document.getElementById('daily-type');
+                const methodSelect = document.getElementById('daily-method');
+                const selectedType = typeSelect.value;
+                
+                populateCategorySelect();
+
+                if (selectedType === 'accounts_receivable') {
+                    methodSelect.innerHTML = `<option value="應收明細">應收明細</option>`;
+                    methodSelect.disabled = true;
+                } else if (selectedType === 'accounts_payable') {
+                    methodSelect.innerHTML = `<option value="應付明細">應付明細</option>`;
+                    methodSelect.disabled = true;
+                } else {
+                    methodSelect.disabled = false;
+                    populateDailyMethodSelect();
+                }
+            }
+
             function openAddTransactionModal() {
                 document.getElementById('daily-form').reset();
                 const today = new Date().toISOString();
                 document.getElementById('daily-date').value = today.split('T')[0];
                 document.getElementById('daily-month').value = today.substring(0, 7);
-                populateCategorySelect();
-                populateDailyMethodSelect();
                 populateObjectDatalist();
+                handleTransactionTypeChange();
                 document.getElementById('add-transaction-modal').style.display = 'flex';
             }
 
@@ -1489,6 +1684,7 @@
                 event.preventDefault();
                 const type = document.getElementById('daily-type').value;
                 const amount = parseFloat(document.getElementById('daily-amount').value);
+                const incomeTypes = ['fixed_income', 'other_income', 'prepaid_income', 'accounts_receivable'];
                 
                 const newTransaction = {
                     id: Date.now(),
@@ -1498,7 +1694,7 @@
                     type: type,
                     category: document.getElementById('daily-category').value,
                     month: document.getElementById('daily-month').value,
-                    amount: type.includes('expense') ? -Math.abs(amount) : Math.abs(amount),
+                    amount: incomeTypes.includes(type) ? Math.abs(amount) : -Math.abs(amount),
                     method: document.getElementById('daily-method').value,
                     description: document.getElementById('daily-description').value
                 };
@@ -1516,6 +1712,10 @@
                 const container = document.querySelector('#daily-page-tab-contents .tab-content.active');
                 if (!container) return;
                 
+                const activeTab = document.querySelector('#daily-page-sub-tabs .sub-tab.active');
+                const tabDataType = activeTab ? activeTab.dataset.tab : 'transactions-daily';
+                let baseTransactions = data.dailyTransactions;
+
                 const tbody = container.querySelector('.transaction-table tbody');
                 const noTransactionsMessage = container.querySelector('#no-transactions-message');
                 const sortDirection = container.querySelector('#sort-direction-select').value;
@@ -1537,7 +1737,7 @@
                 else if (selectedPeriod === 'month') filterValue = container.querySelector('#month-filter-input').value;
                 else filterValue = container.querySelector('#year-filter-input').value;
 
-                const filtered = data.dailyTransactions
+                const filtered = baseTransactions
                     .filter(t => t.date && t.date.startsWith(filterValue))
                     .sort((a, b) => {
                         const dateComparison = new Date(b.date) - new Date(a.date);
@@ -2118,6 +2318,39 @@
                  });
             }
 
+            function calculateBalance(transactions) {
+                let income = 0;
+                let expense = 0;
+                transactions.forEach(t => {
+                    if (t.amount > 0) {
+                        income += t.amount;
+                    } else {
+                        expense += Math.abs(t.amount);
+                    }
+                });
+                return { income, expense, balance: income - expense };
+            }
+
+            function getPreviousPeriodTransactions(reportType, dateValue) {
+                if (reportType === 'daily-report') {
+                    const currentDate = new Date(dateValue);
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    const prevDateString = currentDate.toISOString().split('T')[0];
+                    return data.dailyTransactions.filter(t => t.date === prevDateString);
+                } else if (reportType === 'monthly-report') {
+                    const [year, month] = dateValue.split('-').map(Number);
+                    const prevMonthDate = new Date(year, month - 2, 1);
+                    const prevYear = prevMonthDate.getFullYear();
+                    const prevMonth = String(prevMonthDate.getMonth() + 1).padStart(2, '0');
+                    const prevMonthString = `${prevYear}-${prevMonth}`;
+                    return data.dailyTransactions.filter(t => t.date.startsWith(prevMonthString));
+                } else if (reportType === 'yearly-report') {
+                    const prevYear = parseInt(dateValue) - 1;
+                    return data.dailyTransactions.filter(t => t.date.startsWith(String(prevYear)));
+                }
+                return [];
+            }
+
             function generateStandardReportPreview(transactions) {
                 const incomeData = { fixed: {}, other: {} }; 
                 const expenseData = { fixed: {}, other: {} };
@@ -2248,6 +2481,7 @@
                 const dateEl = document.getElementById('report-preview-date');
                 const preparerEl = document.getElementById('report-preview-preparer');
                 const previewBodyEl = document.getElementById('report-preview-body');
+                const customInfoTableContainer = document.getElementById('custom-info-table-container');
                 
                 const activeContent = document.getElementById(`${reportType}-content`);
                 const selectedPreparer = activeContent.querySelector('.report-preparer-select').value;
@@ -2292,68 +2526,285 @@
 
                 if (standardReports.includes(reportType)) {
                     previewBodyEl.innerHTML = generateStandardReportPreview(filteredTransactions);
-                    previewBodyEl.className = 'preview-body'; // Reset classes to remove centering and placeholder text styles
+                    previewBodyEl.className = 'preview-body'; 
+                    customInfoTableContainer.style.display = 'block';
+
+                    const currentPeriodStats = calculateBalance(filteredTransactions);
+                    let previousPeriodStats = { income: 0, expense: 0, balance: 0 };
+                    
+                    let a1Text = '', c1Text = '';
+                    let dateValue = '';
+
+                    switch (reportType) {
+                        case 'daily-report':
+                            dateValue = document.getElementById('daily-report-date').value || new Date().toISOString().split('T')[0];
+                            a1Text = '本日收入'; c1Text = '上一日結餘';
+                            break;
+                        case 'monthly-report':
+                             dateValue = document.getElementById('monthly-report-month').value || new Date().toISOString().substring(0, 7);
+                             a1Text = '本月收入'; c1Text = '上一月結餘';
+                            break;
+                        case 'yearly-report':
+                            dateValue = document.getElementById('yearly-report-year').value || new Date().getFullYear();
+                            a1Text = '本年收入'; c1Text = '上一年結餘';
+                            break;
+                        case 'custom-report':
+                            a1Text = '本期間收入'; c1Text = '';
+                            break;
+                    }
+                    
+                    if (reportType !== 'custom-report') {
+                        const previousPeriodTransactions = getPreviousPeriodTransactions(reportType, dateValue);
+                        previousPeriodStats = calculateBalance(previousPeriodTransactions);
+                    }
+
+                    const cumulativeBalance = currentPeriodStats.balance + previousPeriodStats.balance;
+
+                    document.getElementById('custom-A1').textContent = a1Text;
+                    document.getElementById('custom-B1').textContent = formatCurrency(currentPeriodStats.income);
+                    document.getElementById('custom-C1').textContent = c1Text;
+                    document.getElementById('custom-D1').textContent = formatCurrency(previousPeriodStats.balance);
+                    
+                    document.getElementById('custom-A2').textContent = a1Text.replace('收入', '支出');
+                    document.getElementById('custom-B2').textContent = formatCurrency(currentPeriodStats.expense);
+                    
+                    document.getElementById('custom-A3').textContent = a1Text.replace('收入', '結餘');
+                    document.getElementById('custom-B3').textContent = formatCurrency(currentPeriodStats.balance);
+
+                    document.getElementById('custom-C2').textContent = '累積結餘';
+                    document.getElementById('custom-D2').textContent = formatCurrency(cumulativeBalance);
+
+                    if (reportType === 'custom-report') {
+                        document.getElementById('custom-C1').textContent = '';
+                        document.getElementById('custom-D1').textContent = '';
+                        document.getElementById('custom-C2').textContent = '';
+                        document.getElementById('custom-D2').textContent = '';
+                    }
+
                 } else {
                     // Handle other report types like financial, forecast, reminder
                     previewBodyEl.innerHTML = '報表內容預覽'; // Keep the placeholder for others
                     previewBodyEl.className = 'preview-body text-gray-400 text-center';
-                }
+                customInfoTableContainer.style.display = 'none';
             }
+        }
 
-            function renderReportPage() {
-                showPage('report');
-                const pageElement = document.getElementById('report-page');
+        function renderReportPage() {
+            showPage('report');
+            const pageElement = document.getElementById('report-page');
 
-                if (!pageElement.dataset.listenersAttached) {
-                     const reminderSelect = document.getElementById('reminder-resident-select');
-                     reminderSelect.innerHTML = '<option value="">選擇戶號</option>';
-                     data.residents.forEach(r => {
-                         reminderSelect.innerHTML += `<option value="${r.householdNumber}">${r.householdNumber} (${r.name})</option>`;
-                     });
-                     
-                    const reportTabs = pageElement.querySelectorAll('#report-sub-tabs .sub-tab');
-                    const reportContents = pageElement.querySelectorAll('#report-contents .tab-content');
+            if (!pageElement.dataset.listenersAttached) {
+                 const reminderSelect = document.getElementById('reminder-resident-select');
+                 reminderSelect.innerHTML = '<option value="">選擇戶號</option>';
+                 data.residents.forEach(r => {
+                     reminderSelect.innerHTML += `<option value="${r.householdNumber}">${r.householdNumber} (${r.name})</option>`;
+                 });
+                 
+                const reportTabs = pageElement.querySelectorAll('#report-sub-tabs .sub-tab');
+                const reportContents = pageElement.querySelectorAll('#report-contents .tab-content');
 
-                    reportTabs.forEach(tab => {
-                        tab.addEventListener('click', () => {
-                            reportTabs.forEach(t => t.classList.remove('active'));
-                            tab.classList.add('active');
-                            reportContents.forEach(c => c.classList.remove('active'));
-                            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
-                            updateReportPreview();
-                        });
+                reportTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        reportTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        reportContents.forEach(c => c.classList.remove('active'));
+                        document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+                        updateReportPreview();
                     });
-                     
-                    pageElement.querySelectorAll('#report-contents input, #report-contents select').forEach(input => {
-                        input.addEventListener('change', updateReportPreview);
-                    });
-                     
-                    pageElement.querySelectorAll('.export-report-pdf-btn').forEach(btn => {
-                        btn.addEventListener('click', handleExportReportPDF);
-                    });
+                });
+                 
+                pageElement.querySelectorAll('#report-contents input, #report-contents select').forEach(input => {
+                    input.addEventListener('change', updateReportPreview);
+                });
+                 
+                pageElement.querySelectorAll('.export-report-pdf-btn').forEach(btn => {
+                    btn.addEventListener('click', handleExportReportPDF);
+                });
 
-                    pageElement.dataset.listenersAttached = 'true';
-                }
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('daily-report-date').value = today;
-                document.getElementById('custom-report-start').value = today;
-                document.getElementById('custom-report-end').value = today;
-                document.getElementById('monthly-report-month').value = today.substring(0, 7);
-                document.getElementById('financial-report-month').value = today.substring(0, 7);
-                document.getElementById('yearly-report-year').value = new Date().getFullYear();
-                document.getElementById('forecast-report-year').value = new Date().getFullYear();
-                
-                populateReportPreparers();
-                updateReportPreview();
+                pageElement.dataset.listenersAttached = 'true';
             }
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('daily-report-date').value = today;
+            document.getElementById('custom-report-start').value = today;
+            document.getElementById('custom-report-end').value = today;
+            document.getElementById('monthly-report-month').value = today.substring(0, 7);
+            document.getElementById('financial-report-month').value = today.substring(0, 7);
+            document.getElementById('yearly-report-year').value = new Date().getFullYear();
+            document.getElementById('forecast-report-year').value = new Date().getFullYear();
             
-             function renderOtherPage() {
-                showPage('other');
+            populateReportPreparers();
+            updateReportPreview();
+        }
+        
+         function renderOtherPage() {
+            showPage('other');
+            // For now, just render the first tab. Future tabs can be added here.
+            renderTodoListPage();
+        }
+
+        function formatTodoDateTime(dateTimeString) {
+            if (!dateTimeString) return '';
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\//g, '-');
+        }
+
+        function renderTodoListPage() {
+            const pendingList = document.getElementById('pending-todos-list');
+            const completedList = document.getElementById('completed-todos-list');
+            pendingList.innerHTML = '';
+            completedList.innerHTML = '';
+
+            const todos = (data.todos || []).sort((a,b) => new Date(b.createdDateTime) - new Date(a.createdDateTime));
+
+            const pending = todos.filter(t => !t.done);
+            const completed = todos.filter(t => t.done);
+
+            if (pending.length === 0) {
+                pendingList.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400">沒有進行中的事項。</td></tr>`;
+            } else {
+                pending.forEach(todo => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'bg-yellow-50';
+                    tr.innerHTML = `
+                        <td>${formatTodoDateTime(todo.createdDateTime)}</td>
+                        <td>${todo.subject}</td>
+                        <td>${todo.assigner}</td>
+                        <td>${todo.assignee}</td>
+                        <td>${formatTodoDateTime(todo.expectedDateTime)}</td>
+                        <td>
+                            <button data-id="${todo.id}" class="edit-todo-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                            <button data-id="${todo.id}" class="delete-todo-btn text-red-500 hover:text-red-700 ml-2"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                        <td>
+                            <button data-id="${todo.id}" class="complete-todo-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg text-sm">完成</button>
+                        </td>
+                    `;
+                    pendingList.appendChild(tr);
+                });
             }
 
-            function renderSettingsPage() {
-                showPage('settings');
-                const pageElement = document.getElementById('settings-page');
+            if (completed.length === 0) {
+                completedList.innerHTML = `<tr><td colspan="6" class="text-center text-gray-400">沒有已完成的事項。</td></tr>`;
+            } else {
+                completed.forEach(todo => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'bg-green-50 text-gray-500';
+                    tr.innerHTML = `
+                        <td>${formatTodoDateTime(todo.createdDateTime)}</td>
+                        <td>${formatTodoDateTime(todo.completionDateTime)}</td>
+                        <td class="line-through">${todo.subject}</td>
+                        <td>${todo.assigner}</td>
+                        <td>${todo.assignee}</td>
+                        <td>
+                            <button data-id="${todo.id}" class="restore-todo-btn bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-lg text-sm">恢復進行中</button>
+                        </td>
+                    `;
+                    completedList.appendChild(tr);
+                });
+            }
+        }
+
+        function openAddTodoModal(todoId = null) {
+            const modal = document.getElementById('add-todo-modal');
+            const form = document.getElementById('todo-form');
+            const title = document.getElementById('todo-modal-title');
+            form.reset();
+            document.getElementById('todo-id').value = '';
+
+            const datalist = document.getElementById('resident-household-datalist');
+            datalist.innerHTML = '';
+            data.residents.forEach(r => {
+                datalist.innerHTML += `<option value="${r.householdNumber}">${r.householdNumber} (${r.name})</option>`;
+            });
+
+            if (todoId) {
+                const todo = data.todos.find(t => t.id == todoId);
+                if (todo) {
+                    title.textContent = '編輯代辦事項';
+                    document.getElementById('todo-id').value = todo.id;
+                    document.getElementById('todo-datetime').value = todo.createdDateTime;
+                    document.getElementById('todo-subject').value = todo.subject;
+                    document.getElementById('todo-assigner').value = todo.assigner;
+                    document.getElementById('todo-assignee').value = todo.assignee;
+                    document.getElementById('todo-expected-datetime').value = todo.expectedDateTime;
+                    document.getElementById('todo-notes').value = todo.notes;
+                }
+            } else {
+                title.textContent = '新增代辦事項';
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('todo-datetime').value = now.toISOString().slice(0,16);
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function handleTodoFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('todo-id').value;
+            const todoData = {
+                createdDateTime: document.getElementById('todo-datetime').value,
+                subject: document.getElementById('todo-subject').value,
+                assigner: document.getElementById('todo-assigner').value,
+                assignee: document.getElementById('todo-assignee').value,
+                expectedDateTime: document.getElementById('todo-expected-datetime').value,
+                notes: document.getElementById('todo-notes').value,
+            };
+
+            if (id) {
+                const index = data.todos.findIndex(t => t.id == id);
+                if(index > -1) {
+                    data.todos[index] = { ...data.todos[index], ...todoData };
+                }
+            } else {
+                todoData.id = Date.now();
+                todoData.done = false;
+                data.todos.push(todoData);
+            }
+            saveData();
+            renderTodoListPage();
+            renderTodos('overview-todo-list');
+                document.getElementById('add-todo-modal').style.display = 'none';
+        }
+
+        function handleTodoListClick(e) {
+            const target = e.target;
+            const id = parseInt(target.closest('[data-id]')?.dataset.id);
+            if (!id) return;
+
+            const todo = data.todos.find(t => t.id === id);
+            if (!todo) return;
+
+            if (target.closest('.delete-todo-btn')) {
+                showConfirmModal(`確定要刪除代辦事項 "${todo.subject}" 嗎？`, () => {
+                    data.todos = data.todos.filter(t => t.id !== id);
+                    saveData();
+                    renderTodoListPage();
+                    renderTodos('overview-todo-list');
+                });
+            } else if (target.closest('.edit-todo-btn')) {
+                openAddTodoModal(id);
+            } else if (target.closest('.complete-todo-btn')) {
+                const modal = document.getElementById('complete-todo-modal');
+                document.getElementById('complete-todo-id').value = id;
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('completion-datetime').value = now.toISOString().slice(0, 16);
+                modal.style.display = 'flex';
+            } else if (target.closest('.restore-todo-btn')) {
+                showConfirmModal(`確定要將 "${todo.subject}" 恢復為進行中嗎？`, () => {
+                    todo.done = false;
+                    delete todo.completionDateTime;
+                    saveData();
+                    renderTodoListPage();
+                    renderTodos('overview-todo-list');
+                });
+            }
+        }
+
+        function renderSettingsPage() {
+            showPage('settings');
+            const pageElement = document.getElementById('settings-page');
                 
                 pageElement.querySelector('#community-name-input-page').value = data.customCommunityName;
                 pageElement.querySelector('#community-logo-url-input').value = data.communityLogoUrl;
@@ -2364,7 +2815,7 @@
                 renderCategorySettings(pageElement);
                 renderPreparersList(pageElement);
                 renderSuppliersList();
-                renderBackupHistory();
+                renderBackupList();
 
                 if (!pageElement.dataset.listenersAttached) {
                      const settingsTabs = pageElement.querySelectorAll('#settings-sub-tabs .sub-tab');
@@ -2387,9 +2838,7 @@
                         saveData();
                         renderCustomTitle();
                         updateCommunityLogo();
-                        if (document.getElementById('login-community-name')) {
-                           document.getElementById('login-community-name').textContent = data.customCommunityName;
-                        }
+                        document.getElementById('login-community-name').textContent = data.customCommunityName;
                         reRenderAllPages();
                         showSuccessMessage(`社區設定已更新`);
                     });
@@ -2453,7 +2902,18 @@
                         }
                     });
                     
-                    document.getElementById('save-backup-btn').addEventListener('click', handleSaveBackup);
+                    pageElement.querySelector('#log-settings-content').addEventListener('click', e => {
+                        const btn = e.target.closest('button');
+                        if (!btn) return;
+
+                        if (btn.id === 'backup-data-btn') {
+                            handleBackupData();
+                        } else if (btn.classList.contains('restore-backup-btn')) {
+                            const timestamp = btn.dataset.timestamp;
+                            handleRestoreData(timestamp);
+                        }
+                    });
+
                     pageElement.dataset.listenersAttached = 'true';
                 }
             }
@@ -2496,6 +2956,64 @@
                     section.appendChild(addForm);
                     container.appendChild(section);
                 });
+
+                // Event Handlers for categories
+                container.querySelectorAll('.add-cat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const typeKey = btn.dataset.type;
+                        const input = btn.previousElementSibling;
+                        const newCat = input.value.trim();
+                        if (newCat && !(data.categories[typeKey] || []).includes(newCat)) {
+                            if (!data.categories[typeKey]) data.categories[typeKey] = [];
+                            data.categories[typeKey].push(newCat);
+                            saveData();
+                            renderCategorySettings(pageElement);
+                            populateCategorySelect();
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                });
+
+                container.querySelectorAll('.delete-cat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const typeKey = btn.dataset.type;
+                        const catToDelete = btn.dataset.cat;
+                        showConfirmModal(`確定要刪除類別 "${catToDelete}" 嗎？`, () => {
+                            data.categories[typeKey] = data.categories[typeKey].filter(c => c !== catToDelete);
+                            saveData();
+                            renderCategorySettings(pageElement);
+                            populateCategorySelect();
+                        });
+                    });
+                });
+                
+                container.querySelectorAll('.edit-cat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const typeKey = btn.dataset.type;
+                        const index = parseInt(btn.dataset.index);
+                        const catName = data.categories[typeKey][index];
+                        const li = btn.closest('li');
+                        li.innerHTML = `
+                            <input type="text" value="${catName}" class="flex-grow shadow border rounded py-1 px-2 cat-edit-input">
+                            <div class="flex items-center gap-2">
+                                <button data-type="${typeKey}" data-index="${index}" class="save-cat-btn text-green-500 hover:text-green-700"><i class="fas fa-check"></i></button>
+                                <button class="cancel-edit-cat-btn text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+                            </div>`;
+                        
+                        li.querySelector('.save-cat-btn').addEventListener('click', (e) => {
+                            const newCatName = e.currentTarget.closest('li').querySelector('input').value.trim();
+                             if (newCatName) {
+                                data.categories[typeKey][index] = newCatName;
+                                saveData();
+                                renderCategorySettings(pageElement);
+                                populateCategorySelect();
+                            }
+                        });
+                        li.querySelector('.cancel-edit-cat-btn').addEventListener('click', () => renderCategorySettings(pageElement));
+                    });
+                });
+
             }
             
             function renderPreparersList(pageElement) {
@@ -2625,68 +3143,11 @@
             
             function handleDeleteSupplier(e) {
                 const supplierId = e.currentTarget.dataset.id;
-                showConfirmModal('確定要刪除這家廠商嗎？', () => {
+                showConfirmModal('確定要刪除這位廠商嗎？', () => {
                     data.suppliers = data.suppliers.filter(s => s.id !== supplierId);
                     saveData();
                     renderSuppliersList();
                 });
-            }
-
-            function renderBackupHistory() {
-                const tbody = document.getElementById('backup-history-list');
-                const noBackupsMessage = document.getElementById('no-backups-message');
-                tbody.innerHTML = '';
-
-                if (data.backupHistory.length === 0) {
-                    noBackupsMessage.classList.remove('hidden');
-                    return;
-                }
-
-                noBackupsMessage.classList.add('hidden');
-                // Show latest first
-                [...data.backupHistory].reverse().forEach(record => {
-                    const date = new Date(record.timestamp);
-                    const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${formattedDate}</td>
-                            <td>${record.fileName}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            function handleSaveBackup() {
-                try {
-                    const fullDataString = JSON.stringify(data, null, 2); // Pretty print JSON
-                    const blob = new Blob([fullDataString], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-
-                    const now = new Date();
-                    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-                    const fileName = `${data.customCommunityName}_備份_${timestamp}.json`;
-
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    // Add to history
-                    data.backupHistory.push({
-                        timestamp: Date.now(),
-                        fileName: fileName
-                    });
-                    saveData();
-                    renderBackupHistory();
-                    showSuccessMessage('資料已成功備份下載！');
-
-                } catch (error) {
-                    console.error("備份失敗:", error);
-                    showSuccessMessage('資料備份失敗，請查看主控台錯誤訊息。', true);
-                }
             }
 
             function renderResidentControlSettings() {
@@ -2755,6 +3216,93 @@
                 });
             }
             
+            function renderBackupList() {
+                const listEl = document.getElementById('backup-list');
+                if (!listEl) return;
+                const backups = JSON.parse(localStorage.getItem('systemBackups') || '[]');
+                listEl.innerHTML = '';
+                if (backups.length === 0) {
+                    listEl.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500">沒有備份紀錄。</td></tr>`;
+                    return;
+                }
+                backups.sort((a, b) => b.timestamp - a.timestamp).forEach(backup => {
+                    const date = new Date(backup.timestamp);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${date.toLocaleString('zh-TW')}</td>
+                        <td>${backup.filename}</td>
+                        <td><button data-timestamp="${backup.timestamp}" class="restore-backup-btn bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded-lg">復原</button></td>
+                    `;
+                    listEl.appendChild(row);
+                });
+            }
+
+            function handleBackupData() {
+                const timestamp = Date.now();
+                const dateForFile = new Date(timestamp);
+                const filename = `西北社區_備份_${dateForFile.getFullYear()}-${String(dateForFile.getMonth() + 1).padStart(2, '0')}-${String(dateForFile.getDate()).padStart(2, '0')}_${String(dateForFile.getHours()).padStart(2, '0')}-${String(dateForFile.getMinutes()).padStart(2, '0')}.json`;
+                
+                const dataToBackup = {};
+                Object.keys(data).forEach(key => {
+                    dataToBackup[key] = JSON.parse(localStorage.getItem(key));
+                });
+
+                const dataStr = JSON.stringify(dataToBackup, null, 2);
+                const dataBlob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(dataBlob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                const backups = JSON.parse(localStorage.getItem('systemBackups') || '[]');
+                const newBackupRecord = {
+                    timestamp: timestamp,
+                    filename: filename,
+                    dataSnapshot: dataToBackup 
+                };
+                backups.push(newBackupRecord);
+                localStorage.setItem('systemBackups', JSON.stringify(backups));
+                
+                showSuccessMessage('資料已成功備份並下載！');
+                renderBackupList();
+            }
+
+            function handleRestoreData(timestamp) {
+                if (!timestamp) return;
+                const backups = JSON.parse(localStorage.getItem('systemBackups') || '[]');
+                const backupToRestore = backups.find(b => b.timestamp == timestamp);
+
+                if (!backupToRestore) {
+                    showSuccessMessage('找不到指定的備份紀錄！', true);
+                    return;
+                }
+
+                const date = new Date(parseInt(timestamp)).toLocaleString('zh-TW');
+                showConfirmModal(`確定要還原到 ${date} 的備份嗎？目前所有資料將會被覆蓋，此操作無法復原！`, () => {
+                    try {
+                        const dataSnapshot = backupToRestore.dataSnapshot;
+                        Object.keys(data).forEach(key => {
+                            localStorage.removeItem(key);
+                        });
+                        Object.keys(dataSnapshot).forEach(key => {
+                            localStorage.setItem(key, JSON.stringify(dataSnapshot[key]));
+                        });
+                        showSuccessMessage('資料已還原成功！頁面即將重新整理。');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } catch (e) {
+                        console.error('Restore failed:', e);
+                        showSuccessMessage('資料還原失敗，請查看主控台錯誤訊息。', true);
+                    }
+                });
+            }
+
             function showSuccessMessage(message, isError = false) {
                  const modal = document.createElement('div');
                 modal.className = 'custom-modal';
@@ -2823,16 +3371,26 @@
                 
                 document.getElementById('daily-form').addEventListener('submit', handleDailyFormSubmit);
                 document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('add-transaction-modal').style.display = 'none');
-                document.getElementById('daily-type').addEventListener('change', populateCategorySelect);
+            document.getElementById('daily-type').addEventListener('change', handleTransactionTypeChange);
 
-                document.getElementById('add-supplier-btn').addEventListener('click', () => openSupplierModal());
-                document.getElementById('close-supplier-modal-btn').addEventListener('click', () => document.getElementById('add-supplier-modal').style.display = 'none');
-                document.getElementById('supplier-form').addEventListener('submit', handleSupplierFormSubmit);
+            document.getElementById('add-supplier-btn').addEventListener('click', () => openSupplierModal());
+            document.getElementById('close-supplier-modal-btn').addEventListener('click', () => document.getElementById('add-supplier-modal').style.display = 'none');
+            document.getElementById('supplier-form').addEventListener('submit', handleSupplierFormSubmit);
 
+            document.getElementById('add-todo-btn').addEventListener('click', () => openAddTodoModal());
+            document.getElementById('close-todo-modal-btn').addEventListener('click', () => document.getElementById('add-todo-modal').style.display = 'none');
+            document.getElementById('todo-form').addEventListener('submit', handleTodoFormSubmit);
+            document.getElementById('other-page').addEventListener('click', handleTodoListClick);
 
-                window.addEventListener('click', (event) => {
-                    if (event.target.classList.contains('modal')) event.target.style.display = 'none';
-                });
+            document.getElementById('close-complete-todo-modal-btn').addEventListener('click', () => document.getElementById('complete-todo-modal').style.display = 'none');
+            document.getElementById('complete-todo-form').addEventListener('submit', handleCompleteTodoFormSubmit);
+
+            document.getElementById('export-pending-todos-pdf-btn').addEventListener('click', () => exportTodosPDF('pending'));
+            document.getElementById('export-completed-todos-pdf-btn').addEventListener('click', () => exportTodosPDF('completed'));
+
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+            });
 
                 document.getElementById('toggle-calendar-btn').textContent = data.dateFormat === 'roc' ? '切換西元' : '切換民國';
                 document.getElementById('toggle-time-format-btn').textContent = data.is12Hour ? '切換24小時' : '切換12小時';
@@ -2840,6 +3398,80 @@
                 renderCustomTitle();
                 renderOverviewPage();
             }
+
+            function handleCompleteTodoFormSubmit(e) {
+                e.preventDefault();
+                const todoId = document.getElementById('complete-todo-id').value;
+                const completionDateTime = document.getElementById('completion-datetime').value;
+                const todo = data.todos.find(t => t.id == todoId);
+                if (todo) {
+                    todo.done = true;
+                    todo.completionDateTime = completionDateTime;
+                    saveData();
+                    renderTodoListPage();
+                    renderTodos('overview-todo-list');
+                    document.getElementById('complete-todo-modal').style.display = 'none';
+                }
+            }
+            
+            async function exportTodosPDF(status) {
+                const isPending = status === 'pending';
+                const listId = isPending ? 'pending-todos-list' : 'completed-todos-list';
+                const tableBody = document.getElementById(listId);
+
+                if (!tableBody || tableBody.querySelector('td[colspan]')) {
+                    showSuccessMessage('沒有可匯出的資料。', true);
+                    return;
+                }
+
+                const title = `${data.customCommunityName} 代辦事項 (${isPending ? '進行中' : '已完成'})`;
+                const headers = isPending 
+                    ? ["日期時間", "事由", "交辦人", "執行人", "預計完成日時分"]
+                    : ["建立日期", "完成日期", "事由", "交辦人", "執行人"];
+
+                let tableHTML = `<h2 style="text-align:center; font-size: 16pt; margin-bottom: 20px; color: #333;">${title}</h2>
+                    <table style="width:100%; border-collapse:collapse; font-size: 10pt; color: #333;">
+                        <thead><tr>${headers.map(h => `<th style="border:1px solid #999; padding: 6px; background-color:#f2f2f2; text-align: left;">${h}</th>`).join('')}</tr></thead>
+                        <tbody>`;
+
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                rows.forEach(row => {
+                    const cells = Array.from(row.querySelectorAll('td')).slice(0, isPending ? 5 : 6); 
+                    if(isPending) {
+                       // In pending table, we have 7 cells, we need first 5.
+                       const requiredCells = Array.from(row.querySelectorAll('td')).slice(0, 5);
+                       tableHTML += `<tr>${requiredCells.map(cell => `<td style="border:1px solid #ccc; padding: 6px; word-wrap:break-word;">${cell.innerHTML}</td>`).join('')}</tr>`;
+                    } else {
+                       // In completed table, we have 6 cells, we need all of them except the last one (actions).
+                       const requiredCells = Array.from(row.querySelectorAll('td')).slice(0, 5);
+                       tableHTML += `<tr>${requiredCells.map(cell => `<td style="border:1px solid #ccc; padding: 6px; word-wrap:break-word;">${cell.innerHTML}</td>`).join('')}</tr>`;
+                    }
+                });
+                tableHTML += '</tbody></table>';
+                
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.cssText = 'position:absolute; left:-9999px; width:210mm; background:white; padding:15mm; box-sizing:border-box; font-family: "Inter", sans-serif;';
+                pdfContainer.innerHTML = tableHTML;
+                document.body.appendChild(pdfContainer);
+
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const canvas = await html2canvas(pdfContainer, { scale: 3, useCORS: true });
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const margin = 15;
+                    const pdfWidth = pdf.internal.pageSize.getWidth() - 2 * margin;
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight);
+                    pdf.save(`${title}.pdf`);
+                } catch (error) {
+                    console.error("代辦事項 PDF 匯出失敗:", error);
+                    showSuccessMessage('匯出 PDF 失敗', true);
+                } finally {
+                    document.body.removeChild(pdfContainer);
+                }
+            }
+
 
             loadData();
             initializeMainApp();
